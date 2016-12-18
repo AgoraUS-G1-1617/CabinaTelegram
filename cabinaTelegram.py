@@ -9,6 +9,8 @@ import variables
 from src.utils import Utils
 from src.votacion import Votacion
 
+from database import create_database
+
 bot = variables.bot
 
 utils = Utils()
@@ -102,7 +104,14 @@ while True:
                 markup.add(types.InlineKeyboardButton(votacion[0], switch_inline_query="compartir"))
             bot.send_message(message.chat.id, "Mis votaciones", reply_markup=markup)
 
+        def main():
+            try:
+                create_database
+            except Exception as exception:
+                bot.send_message('Error: %s' % exception)
 
+        if __name__ == '__main__':
+            main()
         bot.polling(none_stop=True)
 
     except Exception as e:

@@ -21,24 +21,24 @@ with con:
     cur.execute("PRAGMA foreign_keys = ON")
 
     #Borrar las tablas existentes
-    cur.execute("DROP TABLE IF EXISTS Participacion")
-    cur.execute("DROP TABLE IF EXISTS Respuesta")
-    cur.execute("DROP TABLE IF EXISTS Pregunta")
-    cur.execute("DROP TABLE IF EXISTS Votacion")
-    cur.execute("DROP TABLE IF EXISTS Usuario")
+    # cur.execute("DROP TABLE IF EXISTS Participacion")
+    # cur.execute("DROP TABLE IF EXISTS Respuesta")
+    # cur.execute("DROP TABLE IF EXISTS Pregunta")
+    # cur.execute("DROP TABLE IF EXISTS Votacion")
+    # cur.execute("DROP TABLE IF EXISTS Usuario")
 
     #Crear tabla de Usuario
-    cur.execute("CREATE TABLE Usuario(Id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,Telegram_id INTEGER)")      #Aquí habrá que poner que la Telegram_id no puede ser nula
+    cur.execute("CREATE TABLE IF NOT EXISTS Usuario(Id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,Telegram_id INTEGER)")      #Aquí habrá que poner que la Telegram_id no puede ser nula
 
     #Crear tabla de Votacion
-    cur.execute("CREATE TABLE Votacion(Id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,Nombre TEXT NOT NULL,Id_Usuario INTEGER NOT NULL,FOREIGN KEY (Id_Usuario) REFERENCES Usuario(Id))")
+    cur.execute("CREATE TABLE IF NOT EXISTS Votacion(Id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,Nombre TEXT NOT NULL,Id_Usuario INTEGER NOT NULL,FOREIGN KEY (Id_Usuario) REFERENCES Usuario(Id))")
 
     #Crear tabla de Participación
-    cur.execute("CREATE TABLE Participacion(Id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,Id_usuario INTEGER NOT NULL,Id_votacion INTEGER NOT NULL, FOREIGN KEY (Id_usuario) REFERENCES Usuario(Id), FOREIGN KEY (Id_votacion) REFERENCES Votacion(Id))")
+    cur.execute("CREATE TABLE IF NOT EXISTS Participacion(Id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,Id_usuario INTEGER NOT NULL,Id_votacion INTEGER NOT NULL, FOREIGN KEY (Id_usuario) REFERENCES Usuario(Id), FOREIGN KEY (Id_votacion) REFERENCES Votacion(Id))")
 
 
     #Crear tabla de Pregunta
-    cur.execute("CREATE TABLE Pregunta(Id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,Texto TEXT NOT NULL,Max_respuestas INT NOT NULL DEFAULT 1,Id_votacion INTEGER NOT NULL, FOREIGN KEY (Id_votacion) REFERENCES Votacion(Id))")
+    cur.execute("CREATE TABLE IF NOT EXISTS Pregunta(Id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,Texto TEXT NOT NULL,Max_respuestas INT NOT NULL DEFAULT 1,Id_votacion INTEGER NOT NULL, FOREIGN KEY (Id_votacion) REFERENCES Votacion(Id))")
 
     #Crear tabla de Respuesta
-    cur.execute("CREATE TABLE Respuesta(Id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,Texto TEXT NOT NULL,Veces_elegida INT NOT NULL DEFAULT 0,Id_pregunta INTEGER NOT NULL, FOREIGN KEY (Id_pregunta) REFERENCES Pregunta(Id))")
+    cur.execute("CREATE TABLE IF NOT EXISTS Respuesta(Id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,Texto TEXT NOT NULL,Veces_elegida INT NOT NULL DEFAULT 0,Id_pregunta INTEGER NOT NULL, FOREIGN KEY (Id_pregunta) REFERENCES Pregunta(Id))")
