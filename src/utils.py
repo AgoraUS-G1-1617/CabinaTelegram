@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 import os
 import sqlite3 as lite
+import requests
+import subprocess
 
 class Utils:
     def almacenar_votacion(self,titulo, user_id, preguntas_respuestas):
@@ -75,3 +77,9 @@ class Utils:
 
         except Exception as e:
             print(e)
+
+    def cipher_vote(self, vote):
+        url = 'https://beta.recuento.agoraus1.egc.duckdns.org/api/clavePublica'
+        public_key = requests.get(url).text
+        ans = subprocess.check_output(['java', '-jar', 'src/verification.jar', 'cipher', '%s' % vote, '%s' % public_key])
+        return ans
