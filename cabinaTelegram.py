@@ -112,6 +112,8 @@ while True:
 
         if __name__ == '__main__':
             main()
+
+
         bot.polling(none_stop=True)
 
     except Exception as e:
