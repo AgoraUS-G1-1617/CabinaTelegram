@@ -40,11 +40,14 @@ while True:
         # EJEMPLO DE VOTE
         @bot.message_handler(commands=['testvote'])
         def test_vote_integration(message):
-            voto = utils.cipher_vote("1")
-            url = 'https://beta.recuento.agoraus1.egc.duckdns.org/api/emitirVoto'
-            payload = {'token':'test_cabinaTelegram', 'idPregunta':'1', 'voto':voto}
-            result = requests.post(url, payload)
-            bot.reply_to(message, result)
+            try:
+                voto = utils.cipher_vote("1")
+                url = 'https://beta.recuento.agoraus1.egc.duckdns.org/api/emitirVoto'
+                payload = {'token':'test_cabinaTelegram', 'idPregunta':'1', 'voto':voto}
+                result = requests.post(url, payload)
+                bot.reply_to(message, result)
+            except Exception as e:
+                bot.reply_to(message, e)
 
         # EJEMPLO DE ELIMINAR VOTE
         @bot.message_handler(commands=['testdelvote'])
