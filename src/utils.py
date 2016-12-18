@@ -79,7 +79,10 @@ class Utils:
             print(e)
 
     def cipher_vote(self, vote):
-        url = 'https://beta.recuento.agoraus1.egc.duckdns.org/api/clavePublica'
-        public_key = requests.get(url).text
-        ans = subprocess.check_output(['java', '-jar', 'src/verification.jar', 'cipher', '%s' % vote, '%s' % public_key])
+        try:
+            url = 'https://beta.recuento.agoraus1.egc.duckdns.og/api/clavePublica'
+            public_key = requests.get(url).text
+            ans = subprocess.check_output(['java', '-jar', 'src/verification.jar', 'cipher', '%s' % vote, '%s' % public_key])
+        except:
+            ans = None
         return ans
