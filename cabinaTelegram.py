@@ -27,9 +27,8 @@ while True:
                    'Agora US es un sistema de votación electronico que permite llevar el tradiccional' \
                    ' método de votación actual a un sistema online de forma segura.\n\n' \
                    'Este bot es una integración de dicho sistema y actualmente permite:\n' \
-                   '/getvotes - 📰 Obtiene los votos de una encuesta test\n' \
-                   '/votesi - 🔏 Vota SI en una encuesta test\n' \
-                   '/voteno - 🔏 Vota NO en una encuesta test\n' \
+                   '/testvote - 🔏 Vota en una encuesta test\n' \
+                   '/testdelvote - 🔏 Eliminar voto en una encuesta test\n' \
                    '/votacion - 📝 Crea una votación\n' \
                    '/misvotaciones - Muestra mis votaciones creadas\n' \
                    '/compartir - Muestra panel para compartir votaciones' % name
@@ -38,30 +37,22 @@ while True:
             bot.reply_to(message, text)
 
 
-        # EJEMPLO DE GET_VOTES
-        @bot.message_handler(commands=['getvotes'])
-        def get_votes(message):
-            url = 'http://188.213.161.241/API/get_votes.php?votation_id=8'
-            result = requests.get(url)
-            bot.reply_to(message, result)
-
-
-        # EJEMPLO DE SEND_VOTE
-        @bot.message_handler(commands=['votesi'])
-        def send_vote(message):
-            url = 'http://188.213.161.241/API/vote.php'
-            payload = {'votationName': 'testBot', 'vote': 'SI', 'zipcode': '28033'}
+        # EJEMPLO DE VOTE
+        @bot.message_handler(commands=['testvote'])
+        def test_vote_integration(message):
+            voto = utils.cipher_vote("1")
+            url = 'https://beta.recuento.agoraus1.egc.duckdns.org/api/emitirVoto'
+            payload = {'token':'test_cabinaTelegram', 'idPregunta':'1', 'voto':voto}
             result = requests.post(url, payload)
             bot.reply_to(message, result)
 
-
-        @bot.message_handler(commands=['voteno'])
-        def send_vote(message):
-            url = 'http://188.213.161.241/API/vote.php'
-            payload = {'votationName': 'testBot', 'vote': 'NO', 'zipcode': '28033'}
+        # EJEMPLO DE ELIMINAR VOTE
+        @bot.message_handler(commands=['testdelvote'])
+        def test_delvote_integration(message):
+            url = 'https://beta.recuento.agoraus1.egc.duckdns.org/api/eliminarVoto'
+            payload = {'token': 'test_cabinaTelegram', 'idPregunta': '1'}
             result = requests.post(url, payload)
             bot.reply_to(message, result)
-
 
         @bot.message_handler(commands=['votacion'])
         def crear_votacion(message):
