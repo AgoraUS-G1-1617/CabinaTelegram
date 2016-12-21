@@ -25,7 +25,7 @@ while True:
             except Exception as e:
                 print(e)
                 name = ''
-            text = '¡Bienvenido %s!\n' \
+            text = '¡Bienvenido %s votador!\n' \
                    'Agora US es un sistema de votación electronico que permite llevar el tradiccional' \
                    ' método de votación actual a un sistema online de forma segura.\n\n' \
                    'Este bot es una integración de dicho sistema y actualmente permite:\n' \
