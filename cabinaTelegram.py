@@ -8,12 +8,14 @@ from telebot import types
 import variables
 from src.utils import Utils
 from src.votacion import Votacion
+from src.votacion import Panel
 
 from database import create_database
 
 bot = variables.bot
 
 utils = Utils()
+panel = Panel()
 
 while True:
     try:
@@ -66,7 +68,7 @@ while True:
             votacion.crear_votacion(message)
             variables.sesion[user_id] = votacion
 
-        @bot.callback_query_handler(func=lambda call: True)
+        @bot.callback_query_handler(func=lambda call: call.data[:2] != 'ID')
         def responder(message):
             user_id = message.from_user.id
             votacion = variables.sesion[user_id]
@@ -101,8 +103,28 @@ while True:
             votaciones = utils.get_votaciones(user_id)
             markup = types.InlineKeyboardMarkup()
             for votacion in votaciones:
-                markup.add(types.InlineKeyboardButton(votacion[0], switch_inline_query="compartir"))
+                markup.add(types.InlineKeyboardButton(votacion[0], switch_inline_query="misvotaciones"))
             bot.send_message(message.chat.id, "Mis votaciones", reply_markup=markup)
+
+        @bot.inline_handler(func=lambda m: True)
+        def query_text(inline_query):
+            panel.query_text(inline_query)
+
+
+        @bot.callback_query_handler(func=lambda call: call.data[:2] == 'ID')
+        def callback_start_votation(call):
+            user_id = call.from_user.id
+            try:
+                votacion_id = call.data.split('ID')[1]
+                votacion_datos = utils.get_votacion(votacion_id)
+                votacion = Votacion()
+                votacion.titulo = votacion_datos[0]
+                votacion.owner_id = votacion_datos[1]
+                votacion.preguntas_respuestas = votacion_datos[2]
+                variables.sesion[user_id] = votacion
+                votacion.enviar_pregunta(user_id)
+            except Exception as e:
+                print(e)
 
         def main():
             try:

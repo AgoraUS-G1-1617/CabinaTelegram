@@ -16,6 +16,8 @@ class Votacion:
         self.preguntas_respuestas = {}
         self.respuestas_seleccionadas = []
         self.owner_id = 0
+        self.temp_msg_question_id = None
+        self.temp_preguntas = None
 
     def crear_votacion(self, message):
         self.pide_titulo(message.chat.id)
@@ -118,25 +120,26 @@ class Votacion:
         return len(self.preguntas_respuestas[pregunta])
 
     def enviar_pregunta(self, chat_id):
-        global msg_question_id, preguntas
-        if 'preguntas' not in globals():
-            preguntas = self.mostrar_preguntas()
-            preguntas.reverse()
-        if len(preguntas) == 0:
-            bot.edit_message_text('👍 Gracias por su participación', chat_id=chat_id, message_id=msg_question_id)
-            del msg_question_id, preguntas
+        if self.temp_preguntas is None:
+            self.temp_preguntas = self.mostrar_preguntas()
+            self.temp_preguntas.reverse()
+        if len(self.temp_preguntas) == 0:
+            bot.edit_message_text('👍 Gracias por su participación', chat_id=chat_id,
+                                  message_id=self.temp_msg_question_id)
+            self.temp_msg_question_id = None
+            self.temp_preguntas = None
             return False
-        pregunta = preguntas.pop()
+        pregunta = self.temp_preguntas.pop()
         respuestas = self.mostrar_respuestas(pregunta)
         markup = types.InlineKeyboardMarkup()
         for respuesta in respuestas:
             markup.add(types.InlineKeyboardButton(respuesta, callback_data=respuesta))
-        if 'msg_question_id' not in globals():
+        if self.temp_msg_question_id is None:
             msg_question = bot.send_message(chat_id, pregunta, reply_markup=markup)
-            msg_question_id = msg_question.message_id
+            self.temp_msg_question_id = msg_question.message_id
         else:
-            bot.edit_message_text(pregunta, chat_id=chat_id, message_id=msg_question_id)
-            bot.edit_message_reply_markup(chat_id=chat_id, message_id=msg_question_id, reply_markup=markup)
+            bot.edit_message_text(pregunta, chat_id=chat_id, message_id=self.temp_msg_question_id)
+            bot.edit_message_reply_markup(chat_id=chat_id, message_id=self.temp_msg_question_id, reply_markup=markup)
 
     def responder_pregunta(self, message):
         chat_id = message.message.chat.id
@@ -152,3 +155,46 @@ class Votacion:
                 text += '    ▫️ %s\n' % respuesta
 
         return text
+
+
+class Panel:
+
+    def crear_votacion(self, votacion_datos):
+        try:
+            votacion = Votacion()
+            votacion.titulo = votacion_datos[0]
+            votacion.owner_id = votacion_datos[1]
+            votacion.preguntas_respuestas = votacion_datos[2]
+        except Exception as e:
+            print(e)
+
+    def enviar_votacion(self, votacion_id, user_id):
+        try:
+            votacion_datos = utils.get_votacion(votacion_id)
+            votacion = Votacion()
+            votacion.titulo = votacion_datos[0]
+            votacion.owner_id = votacion_datos[1]
+            votacion.preguntas_respuestas = votacion_datos[2]
+            variables.sesion[user_id] = votacion
+            votacion.enviar_pregunta(user_id)
+        except Exception as e:
+            bot.send_message(user_id, 'Algo no fue bien')
+            print(e)
+
+    def query_text(self, inline_query):
+        try:
+            user_id = inline_query.from_user.id
+            votaciones = utils.get_votaciones(user_id)
+            res = []
+            for votacion in votaciones:
+                nombre = votacion[0]
+                votacion_id = votacion[3]
+                markup = types.InlineKeyboardMarkup()
+                markup.add(types.InlineKeyboardButton('Comenzar votación', callback_data='ID%s' % str(votacion_id)))
+                r = types.InlineQueryResultArticle(str(votacion_id), nombre, types.InputTextMessageContent(nombre),
+                                                   reply_markup=markup)
+                res.append(r)
+
+            bot.answer_inline_query(inline_query.id, res)
+        except Exception as exception:
+            print(str(exception))
