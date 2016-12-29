@@ -67,7 +67,7 @@ class Utils:
             con = lite.connect(path)
             with con:
                 cur = con.cursor()
-                id_votaciones = cur.execute("""SELECT Votacion.id FROM Votacion JOIN Usuario ON Votacion.Id_Usuario = Usuario.id WHERE Usuario.Telegram_id = ?""", (user_id,)).fetchall()
+                id_votaciones = cur.execute("""SELECT Votacion.id FROM Votacion WHERE Votacion.Id_usuario = ?""", (user_id,)).fetchall()
             for id_votacion in id_votaciones:
                 votaciones.append(self.get_votacion(id_votacion[0]))
             return votaciones
