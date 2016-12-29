@@ -20,7 +20,7 @@ class Utils:
             for row in aux:
                 votacionId = row[0]
             # Crear preguntas para esa votación
-            for pregunta in preguntas_respuestas:
+            for pregunta in sorted(preguntas_respuestas):
                 cur.execute("""INSERT INTO Pregunta(Texto,Max_respuestas,Id_votacion) VALUES(?,?,?)""",
                             (pregunta, 50, votacionId))
                 aux2 = cur.execute("""SELECT Pregunta.id FROM Pregunta WHERE Pregunta.texto == ?""", (pregunta,))
@@ -43,20 +43,18 @@ class Utils:
             votacion = cur.execute("""SELECT Nombre FROM Votacion WHERE Id == ?""", (idVotacion,)).fetchone()[0]
             user_id = cur.execute("""SELECT Id_Usuario FROM Votacion WHERE Id == ?""", (idVotacion,)).fetchone()[0]
             diccionario = {}
-            preguntas = cur.execute("""SELECT Texto FROM Pregunta WHERE Id_votacion LIKE ?""", (idVotacion,))
+            preguntas = cur.execute("""SELECT Texto FROM Pregunta WHERE Id_votacion LIKE ?""", (idVotacion,)).fetchall()
             for row in preguntas:
-                aux = cur.execute("""SELECT Id FROM Pregunta WHERE Pregunta.texto LIKE ?""", (row[0],))
+                aux = cur.execute("""SELECT Id FROM Pregunta WHERE Pregunta.texto LIKE ?""", (row[0],)).fetchone()
                 nombrePregunta = row[0]
-                idPregunta = 0
-                for x in aux:
-                    idPregunta = x[0]
-                auxRespuestas = cur.execute("""SELECT Texto FROM Respuesta WHERE Respuesta.Id_pregunta LIKE ?""",
-                                            (idPregunta,))
+                idPregunta = aux[0]
+                auxRespuestas = cur.execute("""SELECT Texto FROM Respuesta WHERE Respuesta.Id_pregunta == ? group by Texto""",
+                                            (idPregunta,)).fetchall()
                 respuestas = []
                 for row in auxRespuestas:
                     respuestas.append(row[0])
 
-            diccionario[nombrePregunta] = respuestas
+                diccionario[nombrePregunta] = respuestas
         return [votacion, user_id, diccionario, idVotacion]
 
     def get_votaciones(self, user_id):
@@ -69,11 +67,10 @@ class Utils:
             con = lite.connect(path)
             with con:
                 cur = con.cursor()
-                id_votaciones = cur.execute("""SELECT Votacion.id FROM Votacion WHERE Votacion.Id_Usuario == ?""", (user_id,)).fetchall()
+                id_votaciones = cur.execute("""SELECT Votacion.id FROM Votacion JOIN Usuario ON Votacion.Id_Usuario = Usuario.id WHERE Usuario.Telegram_id = ?""", (user_id,)).fetchall()
             for id_votacion in id_votaciones:
                 votaciones.append(self.get_votacion(id_votacion[0]))
             return votaciones
-
 
         except Exception as e:
             print(e)
