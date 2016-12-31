@@ -7,9 +7,8 @@ import subprocess
 
 class Utils:
     def almacenar_votacion(self,titulo, user_id, preguntas_respuestas):
-        #Ruta donde se creará la base de datos. En sistemas UNIX-like será /home/username/votacion.db
-        home = os.path.expanduser('~')
-        path = home + '/votacion.db'
+        # Ruta donde se creará la base de datos (por defecto estará en la carpeta actual)
+        path = 'votacion.db'
         #Crea una conexión con la base de datos establecida en la ruta. Si no existe la base de datos, se creará una nueva
         con = lite.connect(path)
         with con:
@@ -32,9 +31,8 @@ class Utils:
                                 (respuesta, 0, preguntaId))
 
     def get_votacion(self, idVotacion):
-        # Ruta donde se creará la base de datos. En sistemas UNIX-like será /home/username/votacion.db
-        home = os.path.expanduser('~')
-        path = home + '/votacion.db'
+        # Ruta donde se creará la base de datos (por defecto estará en la carpeta actual)
+        path = 'votacion.db'
         # Crea una conexión con la base de datos establecida en la ruta. Si no existe la base de datos, se creará una nueva
         con = lite.connect(path)
         with con:
@@ -61,8 +59,8 @@ class Utils:
         votaciones = []
         try:
             # Ruta donde se creará la base de datos. En sistemas UNIX-like será /home/username/votacion.db
-            home = os.path.expanduser('~')
-            path = home + '/votacion.db'
+            # Ruta donde se creará la base de datos (por defecto estará en la carpeta actual)
+            path = 'votacion.db'
             # Crea una conexión con la base de datos establecida en la ruta. Si no existe la base de datos, se creará una nueva
             con = lite.connect(path)
             with con:
