@@ -12,7 +12,12 @@ bot = variables.bot
 
 class Votacion:
     def __init__(self):
+        self.id_votacion = 0
+        self.id_primera_pregunta = 0
         self.titulo = ""
+        self.fecha_creacion = ""
+        self.fecha_cierre = ""
+        self.cp = ""
         self.preguntas_respuestas = {}
         self.respuestas_seleccionadas = []
         self.owner_id = 0
