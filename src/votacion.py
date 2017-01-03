@@ -1,6 +1,6 @@
 # -*- encoding: utf-8 -*-
 
-import telebot, requests, json
+import telebot
 from telebot import types
 import requests
 import variables
