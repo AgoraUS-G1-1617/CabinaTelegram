@@ -97,10 +97,11 @@ while True:
             variables.sesion[user_id] = votacion
 
         @bot.callback_query_handler(func=lambda call: call.data[:2] != 'ID')
-        def responder(message):
-            user_id = message.from_user.id
+        def responder(call):
+            user_id = call.from_user.id
+            bot.answer_callback_query(call.id, "Voto emitido")
             votacion = variables.sesion[user_id]
-            votacion.responder_pregunta(message)
+            votacion.responder_pregunta(call)
 
 
         @bot.message_handler(commands=['misvotaciones'])

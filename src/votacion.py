@@ -156,7 +156,7 @@ class Votacion:
             url = 'https://recuento.agoraus1.egc.duckdns.org/api/emitirVoto'
             payload = {'token': 'test_cabinaTelegram', 'idPregunta': idRespuesta, 'voto': voto}
             result = requests.post(url, payload)
-            bot.reply_to(message, result)
+            # bot.reply_to(message, result)
         except Exception as e:
             bot.reply_to(message, e)
         self.respuestas_seleccionadas.append(respuesta)
