@@ -22,24 +22,48 @@ while True:
         @bot.message_handler(commands=['help', 'start'])
         def send_welcome(message):
             chat_id = message.chat.id
+            user_id = message.from_user.id
+            unique_code = utils.extract_unique_code(message.text)
             try:
                 name = message.from_user.first_name
             except Exception as e:
                 print(e)
                 name = ''
-            text = '¡Bienvenido %s votador!\n' \
-                   'Agora US es un sistema de votación electronico que permite llevar el tradiccional' \
-                   ' método de votación actual a un sistema online de forma segura.\n\n' \
-                   'Este bot es una integración de dicho sistema y actualmente permite:\n' \
-                   '/testvote - 🔏 Vota en una encuesta test\n' \
-                   '/testdelvote - 🔏 Eliminar voto en una encuesta test\n' \
-                   '/votacion - 📝 Crea una votación\n' \
-                   '/misvotaciones - Muestra mis votaciones creadas\n' \
-                   '/compartir - Muestra panel para compartir votaciones' % name
 
-            bot.send_photo(chat_id, 'http://imgur.com/VesqBnN.png')
+            if unique_code and utils.set_logged(user_id, unique_code):
+                text = '¡Bienvenido %s, has iniciado sesión correctamente!\n' % name
+            else:
+                text = '¡Bienvenido %s votador!\n' \
+                       'Agora US es un sistema de votación electronico que permite llevar el tradiccional' \
+                       ' método de votación actual a un sistema online de forma segura.\n\n' \
+                       'Este bot es una integración de dicho sistema y actualmente permite:\n' \
+                       '/testvote - 🔏 Vota en una encuesta test\n' \
+                       '/testdelvote - 🔏 Eliminar voto en una encuesta test\n' \
+                       '/votacion - 📝 Crea una votación\n' \
+                       '/misvotaciones - Muestra mis votaciones creadas\n' \
+                       '/compartir - Muestra panel para compartir votaciones' % name
+                bot.send_photo(chat_id, 'http://imgur.com/VesqBnN.png')
             bot.reply_to(message, text)
 
+
+        @bot.message_handler(commands=['login'])
+        def login(message):
+            chat_id = message.chat.id
+            user_id = message.from_user.id
+            url = variables.login_link + str(user_id)
+            markup = types.InlineKeyboardMarkup()
+            markup.add(types.InlineKeyboardButton('Invitación', url=url))
+            bot.send_message(chat_id, "Incia sesión a través de este enlace:", reply_markup=markup)
+
+        @bot.message_handler(commands=['logout'])
+        def logout(message):
+            user_id = message.from_user.id
+            logged = utils.logout(user_id)
+            if not logged:
+                text = 'Has cerrado sesión correctamente.'
+            else:
+                text = 'No hemos podido cerrar sesión.'
+            bot.reply_to(message, text)
 
         # EJEMPLO DE VOTE
         @bot.message_handler(commands=['testvote'])

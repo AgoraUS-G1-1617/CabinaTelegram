@@ -1,2 +1,4 @@
 pyTelegramBotAPI==2.2.3
 pytest
+requests
+flask

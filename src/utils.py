@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 import os
+import hashlib
 import sqlite3 as lite
 import requests
 import subprocess
@@ -81,3 +82,45 @@ class Utils:
         except:
             ans = None
         return ans
+
+    def generate_token(self, telegram_id):
+        token = hashlib.sha1(os.urandom(128)).hexdigest()
+        try:
+            path = 'votacion.db' # CAMBIAR
+            con = lite.connect(path)
+            with con:
+                cur = con.cursor()
+                cur.execute("INSERT OR REPLACE INTO Usuario(Id, Telegram_id, Token, Logged) "
+                            "VALUES((select Id from Usuario where Telegram_id = ?),?,?,?)",
+                            (telegram_id, telegram_id, token, 0))
+            return token
+        except Exception as e:
+            print(str(e))
+
+    def set_logged(self, telegram_id, token):
+        try:
+            path = 'votacion.db'
+            con = lite.connect(path)
+            with con:
+                cur = con.cursor()
+                cur.execute("UPDATE Usuario SET Logged = 1 WHERE Telegram_id = ? AND Token = ?", (telegram_id, token))
+                logged = cur.execute("SELECT Logged FROM Usuario WHERE Telegram_id = ?", (telegram_id,)).fetchone()[0]
+                return bool(logged)
+        except Exception as e:
+            print(str(e))
+
+    def logout(self, telegram_id):
+        try:
+            path = 'votacion.db'
+            con = lite.connect(path)
+            with con:
+                cur = con.cursor()
+                cur.execute("UPDATE Usuario SET Logged = 0 WHERE Telegram_id = ? ", (telegram_id,))
+                logged = cur.execute("SELECT Logged FROM Usuario WHERE Telegram_id = ?", (telegram_id,)).fetchone()[0]
+                return bool(logged)
+        except Exception as e:
+            print(str(e))
+
+    def extract_unique_code(self, text):
+        # Extracts the unique_code from the sent /start command.
+        return text.split()[1] if len(text.split()) > 1 else None
