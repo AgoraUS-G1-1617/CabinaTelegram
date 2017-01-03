@@ -1,6 +1,6 @@
 # -*- encoding: utf-8 -*-
 
-import telebot
+import telebot, requests, json
 from telebot import types
 
 import variables
@@ -156,6 +156,21 @@ class Votacion:
 
         return text
 
+    def get_votacion_api(self, idVotacion):
+        try:
+            url = 'https://recuento.agoraus1.egc.duckdns.org/api/verVotacion?idVotacion=%i&detallado=si' % idVotacion
+            json = requests.get(url).json()
+            titulo = json['votacion']['titulo']
+            self.titulo = titulo
+            preguntas = json['votacion']['preguntas']
+            for p in preguntas:
+                pregunta = p['texto_pregunta']
+                respuestas = []
+                for r in p['opciones']:
+                    respuestas.append(p['texto_opcion'])
+                self.preguntas_respuestas[pregunta] = respuestas
+        except:
+            return 'No se puede obtener la votación. Vuelva a intentarlo mas tarde...'
 
 class Panel:
 
