@@ -40,8 +40,10 @@ while True:
                        '/testvote - 🔏 Vota en una encuesta test\n' \
                        '/testdelvote - 🔏 Eliminar voto en una encuesta test\n' \
                        '/votacion - 📝 Crea una votación\n' \
-                       '/misvotaciones - Muestra mis votaciones creadas\n' \
-                       '/compartir - Muestra panel para compartir votaciones' % name
+                       '/misvotaciones - ✉️ Muestra mis votaciones creadas\n' \
+                       '/compartir - 🗣 Muestra panel para compartir votaciones\n' \
+                       '/login - 🔓 Inicia sesión con una cuenta de authb\n' \
+                       '/logout - 🔒 Cierra sesión' % name
                 bot.send_photo(chat_id, 'http://imgur.com/VesqBnN.png')
             bot.reply_to(message, text)
 
@@ -51,9 +53,11 @@ while True:
             chat_id = message.chat.id
             user_id = message.from_user.id
             url = variables.login_link + str(user_id)
+            url_registro = variables.register_link
             markup = types.InlineKeyboardMarkup()
-            markup.add(types.InlineKeyboardButton('Invitación', url=url))
-            bot.send_message(chat_id, "Incia sesión a través de este enlace:", reply_markup=markup)
+            markup.add(types.InlineKeyboardButton('Iniciar sesión', url=url))
+            markup.add(types.InlineKeyboardButton('Crear cuenta', url=url_registro))
+            bot.send_message(chat_id, 'Inicia sesión a través de este enlace:\n', reply_markup=markup)
 
         @bot.message_handler(commands=['logout'])
         def logout(message):

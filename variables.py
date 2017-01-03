@@ -6,6 +6,7 @@ config.read('config.ini')
 token_id = config['Telegram']['token_id']
 link = config['Telegram']['link']
 login_link = config['Telegram']['login_link']
+register_link = 'https://authb.agoraus1.egc.duckdns.org/register.php'
 
 bot = telebot.TeleBot(token_id)
 
