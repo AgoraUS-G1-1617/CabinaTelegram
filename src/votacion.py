@@ -2,7 +2,7 @@
 
 import telebot, requests, json
 from telebot import types
-
+import requests
 import variables
 from src.utils import Utils
 
@@ -12,7 +12,12 @@ bot = variables.bot
 
 class Votacion:
     def __init__(self):
+        self.id_votacion = 0
+        self.id_primera_pregunta = 0
         self.titulo = ""
+        self.fecha_creacion = ""
+        self.fecha_cierre = ""
+        self.cp = ""
         self.preguntas_respuestas = {}
         self.respuestas_seleccionadas = []
         self.owner_id = 0
@@ -144,6 +149,15 @@ class Votacion:
     def responder_pregunta(self, message):
         chat_id = message.message.chat.id
         respuesta = message.data
+        idRespuesta = str(len(self.respuestas_seleccionadas))
+        try:
+            voto = utils.cipher_vote(respuesta)
+            url = 'https://recuento.agoraus1.egc.duckdns.org/api/emitirVoto'
+            payload = {'token': 'test_cabinaTelegram', 'idPregunta': idRespuesta, 'voto': voto}
+            result = requests.post(url, payload)
+            bot.reply_to(message, result)
+        except Exception as e:
+            bot.reply_to(message, e)
         self.respuestas_seleccionadas.append(respuesta)
         self.enviar_pregunta(chat_id)
 
