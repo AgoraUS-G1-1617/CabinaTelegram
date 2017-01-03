@@ -152,7 +152,7 @@ class Votacion:
         idRespuesta = str(len(self.respuestas_seleccionadas))
         try:
             voto = utils.cipher_vote(respuesta)
-            url = 'https://beta.recuento.agoraus1.egc.duckdns.org/api/emitirVoto'
+            url = 'https://recuento.agoraus1.egc.duckdns.org/api/emitirVoto'
             payload = {'token': 'test_cabinaTelegram', 'idPregunta': idRespuesta, 'voto': voto}
             result = requests.post(url, payload)
             bot.reply_to(message, result)
