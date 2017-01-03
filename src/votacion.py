@@ -146,9 +146,10 @@ class Votacion:
             bot.edit_message_text(pregunta, chat_id=chat_id, message_id=self.temp_msg_question_id)
             bot.edit_message_reply_markup(chat_id=chat_id, message_id=self.temp_msg_question_id, reply_markup=markup)
 
-    def responder_pregunta(self, message):
-        chat_id = message.message.chat.id
-        respuesta = message.data
+    def responder_pregunta(self, call):
+        message = call.message
+        respuesta = call.data
+        chat_id = message.chat.id
         idRespuesta = str(len(self.respuestas_seleccionadas))
         try:
             voto = utils.cipher_vote(respuesta)
