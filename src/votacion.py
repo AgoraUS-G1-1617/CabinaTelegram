@@ -137,8 +137,10 @@ class Votacion:
         pregunta = self.temp_preguntas.pop()
         respuestas = self.mostrar_respuestas(pregunta)
         markup = types.InlineKeyboardMarkup()
+        i = 0
         for respuesta in respuestas:
-            markup.add(types.InlineKeyboardButton(respuesta, callback_data=respuesta))
+            markup.add(types.InlineKeyboardButton(respuesta, callback_data=i))
+            i += 1
         if self.temp_msg_question_id is None:
             msg_question = bot.send_message(chat_id, pregunta, reply_markup=markup)
             self.temp_msg_question_id = msg_question.message_id
@@ -150,15 +152,15 @@ class Votacion:
         message = call.message
         respuesta = call.data
         chat_id = message.chat.id
-        idRespuesta = str(len(self.respuestas_seleccionadas))
         try:
             voto = utils.cipher_vote(respuesta)
             url = 'https://recuento.agoraus1.egc.duckdns.org/api/emitirVoto'
-            payload = {'token': 'test_cabinaTelegram', 'idPregunta': idRespuesta, 'voto': voto}
+            payload = {'token': 'test_cabinaTelegram', 'idPregunta': self.id_primera_pregunta, 'voto': voto}
             result = requests.post(url, payload)
-            # bot.reply_to(message, result)
+            bot.reply_to(message, result)
         except Exception as e:
             bot.reply_to(message, e)
+        self.id_primera_pregunta += 1
         self.respuestas_seleccionadas.append(respuesta)
         self.enviar_pregunta(chat_id)
 
