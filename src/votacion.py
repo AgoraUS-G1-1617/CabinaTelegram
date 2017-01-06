@@ -136,28 +136,30 @@ class Votacion:
             return False
         pregunta = self.temp_preguntas.pop()
         respuestas = self.mostrar_respuestas(pregunta)
+        pregunta_txt = '*%s*\n\n%i. %s' % (self.titulo, len(self.respuestas_seleccionadas)+1, pregunta)
         markup = types.InlineKeyboardMarkup()
         i = 0
         for respuesta in respuestas:
-            markup.add(types.InlineKeyboardButton(respuesta, callback_data=i))
+            markup.add(types.InlineKeyboardButton(respuesta, callback_data=str(i)))
             i += 1
         if self.temp_msg_question_id is None:
-            msg_question = bot.send_message(chat_id, pregunta, reply_markup=markup)
+            msg_question = bot.send_message(chat_id, pregunta_txt, reply_markup=markup, parse_mode='Markdown')
             self.temp_msg_question_id = msg_question.message_id
         else:
-            bot.edit_message_text(pregunta, chat_id=chat_id, message_id=self.temp_msg_question_id)
+            bot.edit_message_text(pregunta_txt, chat_id=chat_id, message_id=self.temp_msg_question_id, parse_mode='Markdown')
             bot.edit_message_reply_markup(chat_id=chat_id, message_id=self.temp_msg_question_id, reply_markup=markup)
 
     def responder_pregunta(self, call):
         message = call.message
         respuesta = call.data
         chat_id = message.chat.id
+        id_pregunta = self.id_primera_pregunta + len(self.respuestas_seleccionadas)
         try:
             voto = utils.cipher_vote(respuesta)
             url = 'https://recuento.agoraus1.egc.duckdns.org/api/emitirVoto'
-            payload = {'token': 'test_cabinaTelegram', 'idPregunta': self.id_primera_pregunta, 'voto': voto}
-            result = requests.post(url, payload)
-            bot.reply_to(message, result)
+            payload = {'token': 'test_cabinaTelegram', 'idPregunta': id_pregunta, 'voto': voto}
+            result = requests.post(url, payload).json()
+            bot.answer_callback_query(call.id, result['mensaje'])
         except Exception as e:
             bot.reply_to(message, e)
         self.id_primera_pregunta += 1
@@ -177,16 +179,21 @@ class Votacion:
         try:
             url = 'https://recuento.agoraus1.egc.duckdns.org/api/verVotacion?idVotacion=%i&detallado=si' % idVotacion
             json = requests.get(url).json()
-            titulo = json['votacion']['titulo']
-            self.titulo = titulo
+            self.titulo = json['votacion']['titulo']
+            self.cp = json['votacion']['cp']
+            self.fecha_creacion = json['votacion']['fecha_creacion']
+            self.fecha_cierre = json['votacion']['fecha_cierre']
             preguntas = json['votacion']['preguntas']
             for p in preguntas:
+                if preguntas.index(p) == 0:
+                    self.id_primera_pregunta = int(p['id_pregunta'])
                 pregunta = p['texto_pregunta']
                 respuestas = []
                 for r in p['opciones']:
                     respuestas.append(r['texto_opcion'])
                 self.preguntas_respuestas[pregunta] = respuestas
-        except:
+        except Exception as e:
+            print(str(e))
             return 'No se puede obtener la votación. Vuelva a intentarlo mas tarde...'
 
 class Panel:

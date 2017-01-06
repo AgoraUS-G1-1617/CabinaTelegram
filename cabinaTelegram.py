@@ -40,7 +40,7 @@ while True:
                        '/testvote - 🔏 Vota en una encuesta test\n' \
                        '/testdelvote - 🔏 Eliminar voto en una encuesta test\n' \
                        '/votacion - 📝 Crea una votación\n' \
-                       '/misvotaciones - ✉️ Muestra mis votaciones creadas\n' \
+                       '/votaciones - ✉️ Muestra las votaciones existentes\n' \
                        '/compartir - 🗣 Muestra panel para compartir votaciones\n' \
                        '/login - 🔓 Inicia sesión con una cuenta de authb\n' \
                        '/logout - 🔒 Cierra sesión' % name
@@ -99,32 +99,31 @@ while True:
         @bot.callback_query_handler(func=lambda call: call.data[:2] != 'ID')
         def responder(call):
             user_id = call.from_user.id
-            bot.answer_callback_query(call.id, "Voto emitido")
             votacion = variables.sesion[user_id]
             votacion.responder_pregunta(call)
 
 
-        @bot.message_handler(commands=['misvotaciones'])
+        @bot.message_handler(commands=['votaciones'])
         def mis_votaciones(message):
             user_id = message.from_user.id
-            votaciones = utils.get_votaciones(user_id)
-            text = '*Mis votaciones:*\n'
-            for votacion in votaciones:
-                text += '\n🔹 %s /votacion\_%d' % (votacion[0], votacion[3])
+            # votaciones = utils.get_votaciones(user_id)
+            text = '*Votaciones:*\n'
+            # for votacion in votaciones:
+            #     text += '\n🔹 %s /votacion\_%d' % (votacion[0], votacion[3])
+
+            # DE PRUEBA
+            for i in range(1, 5):
+                text += '\n🔹 Ejemplo /votacion\_%d' % i
             bot.reply_to(message, text, parse_mode='Markdown')
 
         @bot.message_handler(regexp='^(/votacion_)\d+')
         def info_votacion(message):
             chat_id = message.chat.id
-            try:
-                votacion_id = message.text.split('_')[1]
-                votacion = utils.get_votacion(votacion_id)
-                if int(votacion[1]) != chat_id:
-                    bot.send_message(chat_id, 'No tienes permiso para ver esta votación')
-                else:
-                    bot.send_message(chat_id, votacion)
-            except Exception as e:
-                bot.send_message(chat_id, 'Algo no fue bien')
+            votacion_id = int(message.text.split('_')[1])
+            markup = types.InlineKeyboardMarkup()
+            markup.add(types.InlineKeyboardButton("Comenzar votación", callback_data="ID%i" % votacion_id))
+            markup.add(types.InlineKeyboardButton("Compartir", switch_inline_query="misvotaciones"))
+            bot.send_message(chat_id, "Resultados:\n\nEjemplo 1 -> 0 votos\nEjemplo 2 -> 0 votos", reply_markup=markup)
 
         @bot.message_handler(commands=['compartir'])
         def compartir_votaciones(message):
@@ -139,19 +138,16 @@ while True:
         def query_text(inline_query):
             panel.query_text(inline_query)
 
-
         @bot.callback_query_handler(func=lambda call: call.data[:2] == 'ID')
         def callback_start_votation(call):
             user_id = call.from_user.id
             try:
-                votacion_id = call.data.split('ID')[1]
-                votacion_datos = utils.get_votacion(votacion_id)
+                votacion_id = int(call.data.split('ID')[1])
                 votacion = Votacion()
-                votacion.titulo = votacion_datos[0]
-                votacion.owner_id = votacion_datos[1]
-                votacion.preguntas_respuestas = votacion_datos[2]
+                votacion.get_votacion_api(votacion_id)
                 variables.sesion[user_id] = votacion
                 votacion.enviar_pregunta(user_id)
+
             except Exception as e:
                 print(e)
 
