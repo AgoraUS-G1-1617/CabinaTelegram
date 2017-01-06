@@ -184,7 +184,7 @@ class Votacion:
                 pregunta = p['texto_pregunta']
                 respuestas = []
                 for r in p['opciones']:
-                    respuestas.append(p['texto_opcion'])
+                    respuestas.append(r['texto_opcion'])
                 self.preguntas_respuestas[pregunta] = respuestas
         except:
             return 'No se puede obtener la votación. Vuelva a intentarlo mas tarde...'
