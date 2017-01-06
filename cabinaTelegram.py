@@ -9,7 +9,9 @@ import variables
 from src.utils import Utils
 from src.votacion import Votacion
 from src.votacion import Panel
-
+import json
+import urllib.request as ur
+import urllib.parse as par
 from database import create_database
 
 bot = variables.bot
@@ -41,11 +43,71 @@ while True:
                        '/testdelvote - 🔏 Eliminar voto en una encuesta test\n' \
                        '/votacion - 📝 Crea una votación\n' \
                        '/votaciones - ✉️ Muestra las votaciones existentes\n' \
+                       '/verVotaciones - ✉️ Muestra las votaciones existentes\n' \
+                       '/recontarVotacion - ✉️ Muestra el resultado de una votación\n' \
                        '/compartir - 🗣 Muestra panel para compartir votaciones\n' \
                        '/login - 🔓 Inicia sesión con una cuenta de authb\n' \
                        '/logout - 🔒 Cierra sesión' % name
                 bot.send_photo(chat_id, 'http://imgur.com/VesqBnN.png')
             bot.reply_to(message, text)
+
+
+        # VER TODAS LAS VOTACIONES DEL SISTEMA
+        @bot.message_handler(commands=['verVotaciones'])
+        def ver_votaciones(message):
+            try:
+                url = 'https://recuento.agoraus1.egc.duckdns.org/api/verVotaciones'
+
+                html = ur.urlopen(url).read()
+                data = json.loads(html.decode('utf-8'))
+                diccionario_votaciones = data.get('votaciones')
+                print(diccionario_votaciones)
+
+                texto = '*Votaciones del sistema:*\n'
+                for votacion in diccionario_votaciones:
+                    print(votacion)
+                    texto += 'votacion:\n'
+                    for campo, valor in votacion.items():
+                        ## texto+=campo
+                        texto += ': '
+                        texto += str(valor)
+                bot.reply_to(message, texto)
+
+            except Exception as e:
+                bot.reply_to(message, e)
+
+
+        # VER RESULTADO (RECUENTO) DE UNA VOTACION EN PARTICULAR
+        # ACTUALMENTE NO SE LE PUEDEN PASAR VOTACIONES EN PARTICULAR, SOLO FUNCIONA CON UNA FIJA
+        @bot.message_handler(commands=['recontarVotacion'])
+        def recuento_votacion(message):
+            try:
+                result = 'Recuento de la votación:'
+                url = 'https://recuento.agoraus1.egc.duckdns.org/api/recontarVotacion?idVotacion=4'
+
+                html = ur.urlopen(url).read()
+                data = json.loads(html.decode('utf-8'))
+                lista_preguntas = data.get('preguntas')
+
+                # pregunta es un diccionario
+                for pregunta in lista_preguntas:
+                    for preg, respuestas in pregunta.items():
+                        if preg == ('texto_pregunta'):
+                            result += '\n\n' + str(pregunta['texto_pregunta'])
+                            print('Esto es una pregunta: ' + str(pregunta['texto_pregunta']))
+                        elif isinstance(respuestas, list):
+                            for opcion in respuestas:
+                                for clave, valor in opcion.items():
+                                    if clave == ('texto_opcion'):
+                                        result += '\n' + str(opcion['texto_opcion'])
+                                        print('Opcion: ' + str(opcion['texto_opcion']))
+                                    if clave == ('votos'):
+                                        result += ' votos: ' + str(opcion['votos'])
+                                        print('Numero de votos: ' + str(opcion['votos']))
+
+                bot.reply_to(message, result)
+            except Exception as e:
+                bot.reply_to(message, e)
 
 
         @bot.message_handler(commands=['login'])
