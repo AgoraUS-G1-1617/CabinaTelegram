@@ -43,7 +43,6 @@ while True:
                        '/testdelvote - 🔏 Eliminar voto en una encuesta test\n' \
                        '/votacion - 📝 Crea una votación\n' \
                        '/votaciones - ✉️ Muestra las votaciones existentes\n' \
-                       '/verVotaciones - ✉️ Muestra las votaciones existentes\n' \
                        '/recontarVotacion - ✉️ Muestra el resultado de una votación\n' \
                        '/compartir - 🗣 Muestra panel para compartir votaciones\n' \
                        '/login - 🔓 Inicia sesión con una cuenta de authb\n' \
@@ -53,29 +52,20 @@ while True:
 
 
         # VER TODAS LAS VOTACIONES DEL SISTEMA
-        @bot.message_handler(commands=['verVotaciones'])
+        @bot.message_handler(commands=['votaciones'])
         def ver_votaciones(message):
             try:
                 url = 'https://recuento.agoraus1.egc.duckdns.org/api/verVotaciones'
-
                 html = ur.urlopen(url).read()
                 data = json.loads(html.decode('utf-8'))
                 diccionario_votaciones = data.get('votaciones')
-                print(diccionario_votaciones)
-
                 texto = '*Votaciones del sistema:*\n'
                 for votacion in diccionario_votaciones:
-                    print(votacion)
-                    texto += 'votacion:\n'
-                    for campo, valor in votacion.items():
-                        ## texto+=campo
-                        texto += ': '
-                        texto += str(valor)
-                bot.reply_to(message, texto)
-
+                    texto += '\n🔹 %s /votacion\_%d' % (votacion['titulo'], votacion['id_votacion'])
+                bot.reply_to(message, texto, parse_mode='Markdown')
             except Exception as e:
-                bot.reply_to(message, e)
-
+                print(str(e))
+                bot.reply_to(message, 'Algo no fue bien')
 
         # VER RESULTADO (RECUENTO) DE UNA VOTACION EN PARTICULAR
         # ACTUALMENTE NO SE LE PUEDEN PASAR VOTACIONES EN PARTICULAR, SOLO FUNCIONA CON UNA FIJA
@@ -163,20 +153,6 @@ while True:
             user_id = call.from_user.id
             votacion = variables.sesion[user_id]
             votacion.responder_pregunta(call)
-
-
-        @bot.message_handler(commands=['votaciones'])
-        def mis_votaciones(message):
-            user_id = message.from_user.id
-            # votaciones = utils.get_votaciones(user_id)
-            text = '*Votaciones:*\n'
-            # for votacion in votaciones:
-            #     text += '\n🔹 %s /votacion\_%d' % (votacion[0], votacion[3])
-
-            # DE PRUEBA
-            for i in range(1, 5):
-                text += '\n🔹 Ejemplo /votacion\_%d' % i
-            bot.reply_to(message, text, parse_mode='Markdown')
 
         @bot.message_handler(regexp='^(/votacion_)\d+')
         def info_votacion(message):
