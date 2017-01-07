@@ -3,6 +3,8 @@
 import time
 
 import pytest
+import json
+import urllib.request as ur
 from telebot import types
 
 import variables
@@ -14,6 +16,43 @@ should_skip = bot is None
 
 @pytest.mark.skipif(should_skip, reason="No environment variables configured")
 class TestBot:
+
+    def test_mostrar_votaciones(self):
+
+        msg = self.create_text_message('/verVotaciones')
+        bot.process_new_messages([msg])
+        url = 'https://recuento.agoraus1.egc.duckdns.org/api/verVotaciones'
+
+        html = ur.urlopen(url).read()
+        data = json.loads(html.decode('utf-8'))
+        assert "'estado': 200" in str(data)
+
+
+    def test_recontar_votacion(self):
+        try:
+            msg = self.create_text_message('/recontarVotacion')
+            bot.process_new_messages([msg])
+            url = 'https://recuento.agoraus1.egc.duckdns.org/api/recontarVotacion?idVotacion=4'
+
+            html = ur.urlopen(url).read()
+            data = json.loads(html.decode('utf-8'))
+            assert "'estado': 200" in str(data)
+        except Exception as e:
+            print('error en la llamada')
+
+    def test_recontar_votacion_no_terminada(self):
+        try:
+            msg = self.create_text_message('/recontarVotacion')
+            bot.process_new_messages([msg])
+            url = 'https://recuento.agoraus1.egc.duckdns.org/api/recontarVotacion?idVotacion=3'
+
+            html = ur.urlopen(url).read()
+            data = json.loads(html.decode('utf-8'))
+            assert "'estado': 400" in str(data)
+        except Exception as e:
+            print('error en la llamada')
+
+
     def test_crear_votacion(self):
         votacion = Votacion()
         votacion.bot = bot
