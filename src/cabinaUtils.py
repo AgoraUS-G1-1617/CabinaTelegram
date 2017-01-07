@@ -60,10 +60,12 @@ class CabinaUtils:
             texto = '*Votaciones del sistema:*\n'
             for votacion in diccionario_votaciones:
                 texto += '\n🔹 %s /votacion\_%d' % (votacion['titulo'], votacion['id_votacion'])
-            bot.reply_to(message, texto, parse_mode='Markdown')
-        except Exception as e:
-            print(str(e))
-            bot.reply_to(message, 'Algo no fue bien')
+            bot.send_message(message.chat.id, texto, parse_mode='Markdown')
+            return texto
+        except Exception:
+            errormsg = 'Ha habido algun problema al procesar la peticion'
+            bot.send_message(message.chat.id, errormsg)
+            return errormsg
 
     # VER RESULTADO (RECUENTO) DE UNA VOTACION EN PARTICULAR
     # ACTUALMENTE NO SE LE PUEDEN PASAR VOTACIONES EN PARTICULAR, SOLO FUNCIONA CON UNA FIJA
@@ -91,9 +93,12 @@ class CabinaUtils:
                                     result += ' votos: ' + str(opcion['votos'])
                                     print('Numero de votos: ' + str(opcion['votos']))
 
-            bot.reply_to(message, result)
-        except Exception as e:
-            bot.reply_to(message, e)
+            bot.send_message(message.chat.id, result)
+            return result
+        except Exception:
+            errormsg = 'No se puede recontar la votacion porque no esta cerrada'
+            bot.send_message(message.chat.id, errormsg)
+            return errormsg
 
     def login(self, message):
         chat_id = message.chat.id

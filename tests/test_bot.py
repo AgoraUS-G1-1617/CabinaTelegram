@@ -61,36 +61,46 @@ class TestBot:
         assert votacion.titulo == resultado.titulo
 
     def test_mostrar_votaciones(self):
+        msg = self.create_text_message('/votaciones')
 
-        msg = self.create_text_message('/verVotaciones')
+        @bot.message_handler(commands=['votaciones'])
+        def mostrar_votaciones(message):
+            res = cabinaUtils.ver_votaciones(message)
+            return res
+
         bot.process_new_messages([msg])
-        url = 'https://recuento.agoraus1.egc.duckdns.org/api/verVotaciones'
+        time.sleep(1)
+        respuesta = mostrar_votaciones(msg)
+        errormsg = 'Ha habido algun problema al procesar la peticion'
+        assert errormsg != respuesta
 
-        html = ur.urlopen(url).read()
-        data = json.loads(html.decode('utf-8'))
-        assert "'estado': 200" in str(data)
+    def test_mostrar_votaciones_error(self):
+        msg = self.create_text_message('/votaciones')
 
-    def test_recontar_votacion(self):
+        @bot.message_handler(commands=['votaciones'])
+        def mostrar_votaciones(message):
+            res = cabinaUtils.ver_votaciones(message)
+            return res
+
+        bot.process_new_messages([msg])
+        time.sleep(1)
+        respuesta = mostrar_votaciones(msg)
+        errormsg = 'Ha habido algun problema al procesar la peticion'
         try:
-            msg = self.create_text_message('/recontarVotacion')
-            bot.process_new_messages([msg])
-            url = 'https://recuento.agoraus1.egc.duckdns.org/api/recontarVotacion?idVotacion=4'
-
-            html = ur.urlopen(url).read()
-            data = json.loads(html.decode('utf-8'))
-            assert "'estado': 200" in str(data)
-        except Exception as e:
-            print('error en la llamada')
+            assert errormsg == respuesta
+        except Exception:
+            print('Se muestra este mensaje en caso de que funcione la peticion')
 
     def test_recontar_votacion_no_terminada(self):
-        try:
-            msg = self.create_text_message('/recontarVotacion')
-            bot.process_new_messages([msg])
-            url = 'https://recuento.agoraus1.egc.duckdns.org/api/recontarVotacion?idVotacion=3'
+        msg = self.create_text_message('/recontarVotacion')
 
-            html = ur.urlopen(url).read()
-            data = json.loads(html.decode('utf-8'))
-            assert "'estado': 400" in str(data)
-        except Exception as e:
-            print('error en la llamada')
+        @bot.message_handler(commands=['recontarVotacion'])
+        def recontar_votacion_no_terminada(message):
+            res = cabinaUtils.recuento_votacion(message)
+            return res
 
+        bot.process_new_messages([msg])
+        time.sleep(1)
+        respuesta = recontar_votacion_no_terminada(msg)
+        errormsg = 'No se puede recontar la votacion porque no esta cerrada'
+        assert errormsg == respuesta
