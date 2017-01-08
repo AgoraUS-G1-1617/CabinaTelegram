@@ -277,41 +277,19 @@ class Votacion:
 
 class Panel:
 
-    def crear_votacion(self, votacion_datos):
-        try:
-            votacion = Votacion()
-            votacion.titulo = votacion_datos[0]
-            votacion.owner_id = votacion_datos[1]
-            votacion.preguntas_respuestas = votacion_datos[2]
-        except Exception as e:
-            print(e)
-
-    def enviar_votacion(self, votacion_id, user_id):
-        try:
-            votacion_datos = utils.get_votacion(votacion_id)
-            votacion = Votacion()
-            votacion.titulo = votacion_datos[0]
-            votacion.owner_id = votacion_datos[1]
-            votacion.preguntas_respuestas = votacion_datos[2]
-            variables.sesion[user_id] = votacion
-            votacion.enviar_pregunta(user_id)
-        except Exception as e:
-            bot.send_message(user_id, 'Algo no fue bien')
-            print(e)
-
     def query_text(self, inline_query):
         try:
-            user_id = inline_query.from_user.id
-            votaciones = utils.get_votaciones(user_id)
+            diccionario_votaciones = utils.obtener_votaciones()
             res = []
-            for votacion in votaciones:
-                nombre = votacion[0]
-                votacion_id = votacion[3]
-                markup = types.InlineKeyboardMarkup()
-                markup.add(types.InlineKeyboardButton('Comenzar votación', callback_data='ID%s' % str(votacion_id)))
-                r = types.InlineQueryResultArticle(str(votacion_id), nombre, types.InputTextMessageContent(nombre),
-                                                   reply_markup=markup)
-                res.append(r)
+            for votacion in diccionario_votaciones:
+                titulo = votacion['titulo']
+                votacion_id = votacion['id_votacion']
+                if inline_query.query.lower() in titulo.lower() or inline_query.query == str(votacion_id):
+                    markup = types.InlineKeyboardMarkup()
+                    markup.add(types.InlineKeyboardButton('Comenzar votación', callback_data='ID%s' % str(votacion_id)))
+                    r = types.InlineQueryResultArticle(str(votacion_id), titulo, types.InputTextMessageContent(titulo),
+                                                       reply_markup=markup)
+                    res.append(r)
 
             bot.answer_inline_query(inline_query.id, res)
         except Exception as exception:

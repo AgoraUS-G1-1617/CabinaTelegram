@@ -6,6 +6,7 @@ import sqlite3 as lite
 import requests
 import subprocess
 import json
+import urllib.request as ur
 
 class Utils:
     def almacenar_votacion(self,titulo, user_id, preguntas_respuestas):
@@ -142,17 +143,6 @@ class Utils:
         token = username + ':' + hashlib.md5(pre_token.encode()).hexdigest()
         return token
 
-    def get_token_user_logged(self, user_id):
-        try:
-            path = 'votacion.db'
-            con = lite.connect(path)
-            with con:
-                cur = con.cursor()
-                logged = cur.execute("SELECT Logged FROM Usuario WHERE Telegram_id = ?", (telegram_id,)).fetchone()[0]
-                return bool(logged)
-        except Exception as e:
-            print(str(e))
-
     def check_token(self, token):
         url = 'https://authb.agoraus1.egc.duckdns.org/api/index.php?method=checkToken&token=%s' % token
         response = requests.get(url)
@@ -162,3 +152,13 @@ class Utils:
     def check_credentials(self, username, password):
         token = self.get_token(username, password)
         return self.check_token(token)
+
+    def obtener_votaciones(self):
+        try:
+            url = 'https://beta.recuento.agoraus1.egc.duckdns.org/api/verVotaciones'
+            html = ur.urlopen(url).read()
+            data = json.loads(html.decode('utf-8'))
+            diccionario_votaciones = data.get('votaciones')
+            return diccionario_votaciones
+        except Exception as e:
+            print(str(e))

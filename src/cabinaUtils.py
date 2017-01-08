@@ -1,8 +1,5 @@
 # -*- encoding: utf-8 -*-
 
-import time
-
-import requests
 from telebot import types
 
 import variables
@@ -11,8 +8,6 @@ from src.votacion import Votacion
 from src.votacion import Panel
 import json
 import urllib.request as ur
-import urllib.parse as par
-from database import create_database
 
 bot = variables.bot
 
@@ -54,10 +49,7 @@ class CabinaUtils:
     # VER TODAS LAS VOTACIONES DEL SISTEMA
     def ver_votaciones(self, message):
         try:
-            url = 'https://beta.recuento.agoraus1.egc.duckdns.org/api/verVotaciones'
-            html = ur.urlopen(url).read()
-            data = json.loads(html.decode('utf-8'))
-            diccionario_votaciones = data.get('votaciones')
+            diccionario_votaciones = utils.obtener_votaciones()
             texto = '*Votaciones del sistema:*\n'
             for votacion in diccionario_votaciones:
                 texto += '\n🔹 /votacion\_%d %s' % (votacion['id_votacion'], votacion['titulo'])
@@ -136,24 +128,26 @@ class CabinaUtils:
         votacion_id = int(message.text.split('_')[1])
         markup = types.InlineKeyboardMarkup()
         markup.add(types.InlineKeyboardButton("Comenzar votación", callback_data="ID%i" % votacion_id))
-        markup.add(types.InlineKeyboardButton("Compartir", switch_inline_query="misvotaciones"))
+        markup.add(types.InlineKeyboardButton("Compartir", switch_inline_query=str(votacion_id)))
         bot.send_message(chat_id, "Resultados:\n\nEjemplo 1 -> 0 votos\nEjemplo 2 -> 0 votos", reply_markup=markup)
 
     def compartir_votaciones(self, message):
-        user_id = message.from_user.id
-        votaciones = utils.get_votaciones(user_id)
-        markup = types.InlineKeyboardMarkup()
-        for votacion in votaciones:
-            markup.add(types.InlineKeyboardButton(votacion[0], switch_inline_query="misvotaciones"))
-        bot.send_message(message.chat.id, "Mis votaciones", reply_markup=markup)
+        try:
+            diccionario_votaciones = utils.obtener_votaciones()
+            markup = types.InlineKeyboardMarkup()
+            for votacion in diccionario_votaciones:
+                titulo = votacion['titulo']
+                markup.add(types.InlineKeyboardButton(titulo, switch_inline_query=titulo))
+            bot.send_message(message.chat.id, "Votaciones:", reply_markup=markup)
+        except Exception as exception:
+            print(str(exception))
 
     def query_text(self, inline_query):
         panel.query_text(inline_query)
 
     def callback_start_votation(self, call):
         user_id = call.from_user.id
-        chat_id = call.message.chat.id
-        is_voted = True
+        is_voted = False # ESTO LO MARCARÁ LA INTEGRACIÓN CON CENSOS
         modificar_voto = False
         eliminar_voto = False
         try:
@@ -174,7 +168,7 @@ class CabinaUtils:
                     eliminar_button = types.InlineKeyboardButton("Eliminar", callback_data="ID%iE" % votacion_id)
                     cancelar_button = types.InlineKeyboardButton("Cancelar", callback_data="CANCEL")
                     markup.add(modificar_button, eliminar_button, cancelar_button)
-                    bot.send_message(chat_id, 'Ya has participado en esta votación', reply_markup=markup)
+                    bot.send_message(user_id, 'Ya has participado en esta votación', reply_markup=markup)
                 else:
                     votacion = Votacion()
                     votacion.modificar_voto = modificar_voto
@@ -186,7 +180,7 @@ class CabinaUtils:
                         votacion.enviar_pregunta(user_id)
             else:
                 text = 'Debes iniciar sesión para votar, recuerda que puedes hacerlo con el comando /login'
-                bot.send_message(chat_id, text)
+                bot.send_message(user_id, text)
 
         except Exception as e:
             print(e)
