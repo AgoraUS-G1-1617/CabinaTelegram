@@ -40,14 +40,6 @@ while True:
         def logout(message):
             cabinaUtils.logout(message)
 
-        @bot.message_handler(commands=['testvote'])
-        def test_vote_integration(message):
-            cabinaUtils.test_vote_integration(message)
-
-        @bot.message_handler(commands=['testdelvote'])
-        def test_delvote_integration(message):
-            cabinaUtils.test_delvote_integration(message)
-
         @bot.message_handler(commands=['votacion'])
         def crear_votacion(message):
             cabinaUtils.crear_votacion(message)

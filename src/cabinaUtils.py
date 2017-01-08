@@ -38,8 +38,6 @@ class CabinaUtils:
                    'Agora US es un sistema de votación electronico que permite llevar el tradiccional' \
                    ' método de votación actual a un sistema online de forma segura.\n\n' \
                    'Este bot es una integración de dicho sistema y actualmente permite:\n' \
-                   '/testvote - 🔏 Vota en una encuesta test\n' \
-                   '/testdelvote - 🔏 Eliminar voto en una encuesta test\n' \
                    '/votacion - 📝 Crea una votación\n' \
                    '/votaciones - ✉️ Muestra las votaciones existentes\n' \
                    '/recontarVotacion - ✉️ Muestra el resultado de una votación\n' \
@@ -62,7 +60,7 @@ class CabinaUtils:
             diccionario_votaciones = data.get('votaciones')
             texto = '*Votaciones del sistema:*\n'
             for votacion in diccionario_votaciones:
-                texto += '\n🔹 %s /votacion\_%d' % (votacion['titulo'], votacion['id_votacion'])
+                texto += '\n🔹 /votacion\_%d %s' % (votacion['id_votacion'], votacion['titulo'])
             bot.send_message(message.chat.id, texto, parse_mode='Markdown')
             return texto
         except Exception:
@@ -122,24 +120,6 @@ class CabinaUtils:
             text = 'No hemos podido cerrar sesión.'
         bot.reply_to(message, text)
 
-    # EJEMPLO DE VOTE
-    def test_vote_integration(self, message):
-        try:
-            voto = utils.cipher_vote("1")
-            url = 'https://beta.recuento.agoraus1.egc.duckdns.org/api/emitirVoto'
-            payload = {'token':'test_cabinaTelegram', 'idPregunta':'1', 'voto':voto}
-            result = requests.post(url, payload)
-            bot.reply_to(message, result)
-        except Exception as e:
-            bot.reply_to(message, e)
-
-    # EJEMPLO DE ELIMINAR VOTE
-    def test_delvote_integration(self, message):
-        url = 'https://beta.recuento.agoraus1.egc.duckdns.org/api/eliminarVoto'
-        payload = {'token': 'test_cabinaTelegram', 'idPregunta': '1'}
-        result = requests.post(url, payload)
-        bot.reply_to(message, result)
-
     def crear_votacion(self, message):
         user_id = message.from_user.id
         votacion = Votacion()
@@ -175,6 +155,7 @@ class CabinaUtils:
         chat_id = call.message.chat.id
         is_voted = True
         modificar_voto = False
+        eliminar_voto = False
         try:
             if utils.get_logged(user_id):
                 # Comprueba si el callback data indica una modificación de voto
@@ -182,12 +163,15 @@ class CabinaUtils:
                 if votacion_id[-1] == 'M':
                     votacion_id = votacion_id[:-1]
                     modificar_voto = True
+                elif votacion_id[-1] == 'E':
+                    votacion_id = votacion_id[:-1]
+                    eliminar_voto = True
                 votacion_id = int(votacion_id)
 
-                if is_voted and not modificar_voto:
+                if is_voted and not modificar_voto and not eliminar_voto:
                     markup = types.InlineKeyboardMarkup(row_width=2)
                     modificar_button = types.InlineKeyboardButton("Modificar", callback_data="ID%iM" % votacion_id)
-                    eliminar_button = types.InlineKeyboardButton("Eliminar", callback_data="CANCEL")  # CAMBIAR
+                    eliminar_button = types.InlineKeyboardButton("Eliminar", callback_data="ID%iE" % votacion_id)
                     cancelar_button = types.InlineKeyboardButton("Cancelar", callback_data="CANCEL")
                     markup.add(modificar_button, eliminar_button, cancelar_button)
                     bot.send_message(chat_id, 'Ya has participado en esta votación', reply_markup=markup)
@@ -196,7 +180,10 @@ class CabinaUtils:
                     votacion.modificar_voto = modificar_voto
                     votacion.get_votacion_api(votacion_id)
                     variables.sesion[user_id] = votacion
-                    votacion.enviar_pregunta(user_id)
+                    if eliminar_voto:
+                        votacion.eliminar_votos_api(call)
+                    else:
+                        votacion.enviar_pregunta(user_id)
             else:
                 text = 'Debes iniciar sesión para votar, recuerda que puedes hacerlo con el comando /login'
                 bot.send_message(chat_id, text)

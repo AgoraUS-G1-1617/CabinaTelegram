@@ -262,6 +262,18 @@ class Votacion:
         except Exception as e:
             print(str(e))
 
+    def eliminar_votos_api(self, call):
+        result = {'mensaje': '...'}
+        try:
+            url = 'https://beta.recuento.agoraus1.egc.duckdns.org/api/eliminarVoto'
+            id_ultima_pregunta = self.id_primera_pregunta + len(self.mostrar_preguntas())
+            for id_pregunta in range(self.id_primera_pregunta, id_ultima_pregunta):
+                payload = {'token': 'test_AÑADIRTOKEN', 'idPregunta': id_pregunta}
+                result = requests.post(url, payload)
+                print(result)
+            bot.answer_callback_query(call.id, result['mensaje'])
+        except Exception as e:
+            print(str(e))
 
 class Panel:
 
