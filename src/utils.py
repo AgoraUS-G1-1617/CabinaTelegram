@@ -109,6 +109,17 @@ class Utils:
         except Exception as e:
             print(str(e))
 
+    def get_logged(self, telegram_id):
+        try:
+            path = 'votacion.db'
+            con = lite.connect(path)
+            with con:
+                cur = con.cursor()
+                logged = cur.execute("SELECT Logged FROM Usuario WHERE Telegram_id = ?", (telegram_id,)).fetchone()[0]
+                return bool(logged)
+        except Exception as e:
+            print(str(e))
+
     def logout(self, telegram_id):
         try:
             path = 'votacion.db'

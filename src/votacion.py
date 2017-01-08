@@ -25,6 +25,7 @@ class Votacion:
         self.owner_id = 0
         self.temp_msg_question_id = None
         self.temp_preguntas = None
+        self.modificar_voto = False
 
     def crear_votacion(self, message):
         self.pide_titulo(message.chat.id)
@@ -192,11 +193,15 @@ class Votacion:
         message = call.message
         respuesta = call.data
         chat_id = message.chat.id
-        id_pregunta = self.id_primera_pregunta + len(self.respuestas_seleccionadas)
+        id_pregunta = self.id_primera_pregunta + len(self.respuestas_seleccionadas) - 1
         try:
             voto = utils.cipher_vote(respuesta)
-            url = 'https://beta.recuento.agoraus1.egc.duckdns.org/api/emitirVoto'
-            payload = {'token': 'test_cabinaTelegram', 'idPregunta': id_pregunta, 'voto': voto}
+            if self.modificar_voto:
+                url = 'https://beta.recuento.agoraus1.egc.duckdns.org/api/modificarVoto'
+                payload = {'token': 'test_cabinaTelegram', 'idPregunta': id_pregunta, 'nuevoVoto': voto}
+            else:
+                url = 'https://beta.recuento.agoraus1.egc.duckdns.org/api/emitirVoto'
+                payload = {'token': 'test_cabinaTelegram', 'idPregunta': id_pregunta, 'voto': voto}
             result = requests.post(url, payload).json()
             bot.answer_callback_query(call.id, result['mensaje'])
         except Exception as e:

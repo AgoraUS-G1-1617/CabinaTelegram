@@ -20,6 +20,10 @@ while True:
         def send_welcome(message):
             cabinaUtils.send_welcome(message)
 
+        @bot.callback_query_handler(func=lambda call: call.data == 'CANCEL')
+        def responder(call):
+            cabinaUtils.cancel(call)
+
         @bot.message_handler(commands=['votaciones'])
         def ver_votaciones(message):
             cabinaUtils.ver_votaciones(message)
@@ -48,7 +52,7 @@ while True:
         def crear_votacion(message):
             cabinaUtils.crear_votacion(message)
 
-        @bot.callback_query_handler(func=lambda call: call.data[:2] != 'ID')
+        @bot.callback_query_handler(func=lambda call: call.data[:2] != 'ID' and call.data != 'CANCEL')
         def responder(call):
             cabinaUtils.responder(call)
 
