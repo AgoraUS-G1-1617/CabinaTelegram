@@ -285,9 +285,11 @@ class Panel:
                 titulo = votacion['titulo']
                 votacion_id = votacion['id_votacion']
                 if inline_query.query.lower() in titulo.lower() or inline_query.query == str(votacion_id):
+                    text = 'Has sido invitado para participar en la votación:️\n✉️ %s\n\n' \
+                           'Recuerda iniciar el bot si todavía no lo has hecho.' % titulo
                     markup = types.InlineKeyboardMarkup()
                     markup.add(types.InlineKeyboardButton('Comenzar votación', callback_data='ID%s' % str(votacion_id)))
-                    r = types.InlineQueryResultArticle(str(votacion_id), titulo, types.InputTextMessageContent(titulo),
+                    r = types.InlineQueryResultArticle(str(votacion_id), titulo, types.InputTextMessageContent(text),
                                                        reply_markup=markup)
                     res.append(r)
 
