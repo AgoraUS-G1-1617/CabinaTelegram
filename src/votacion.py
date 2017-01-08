@@ -3,6 +3,8 @@
 import telebot
 from telebot import types
 import requests
+import datetime
+
 import variables
 from src.utils import Utils
 
@@ -41,7 +43,45 @@ class Votacion:
             return False
         else:
             self.titulo = titulo
-            self.pide_pregunta(chat_id)
+            self.pide_cp(chat_id)
+
+    def pide_cp(self, chat_id):
+        msg = bot.send_message(chat_id, 'Dime tu *CP* para la votación:', parse_mode='Markdown')
+        bot.register_next_step_handler(msg, self.captura_cp)
+
+    def captura_cp(self, message):
+        cp = message.text
+        chat_id = message.chat.id
+
+        if telebot.util.is_command(cp):
+            bot.send_message(message.chat.id, '❌ Votación cancelada')
+            return False
+        elif cp.isdigit():
+            self.cp = cp
+            self.pide_fecha_cierre(chat_id)
+        else:
+            msg = bot.send_message(message.chat.id, 'Introduzca un CP numérico')
+            bot.register_next_step_handler(msg, self.captura_cp)
+
+    def pide_fecha_cierre(self, chat_id):
+        msg = bot.send_message(chat_id, 'Dime una *fecha de cierre* con el formato "dd/mm/yyyy":', parse_mode='Markdown')
+        bot.register_next_step_handler(msg, self.captura_fecha_cierre)
+
+    def captura_fecha_cierre(self, message):
+        fecha_cierre = message.text
+        chat_id = message.chat.id
+
+        if telebot.util.is_command(fecha_cierre):
+            bot.send_message(message.chat.id, '❌ Votación cancelada')
+            return False
+        else:
+            try:
+                fecha_cierre = str(datetime.datetime.strptime(fecha_cierre, '%d/%m/%Y'))
+                self.fecha_cierre = fecha_cierre
+                self.pide_pregunta(chat_id)
+            except:
+                msg = bot.send_message(message.chat.id, 'Introduzca una fecha correcta (dd/mm/yyyy)')
+                bot.register_next_step_handler(msg, self.captura_fecha_cierre)
 
     def pide_pregunta(self, chat_id):
         if self.get_num_preguntas() == 0:
@@ -59,10 +99,9 @@ class Votacion:
             command = telebot.util.extract_command(pregunta)
             if command == 'done' and self.get_num_preguntas() >= 1:
                 utils.almacenar_votacion(self.titulo, self.owner_id, self.preguntas_respuestas)
+                self.put_votacion_api()
                 bot.send_message(chat_id, '✅ Encuesta creada con éxito')
                 bot.send_message(chat_id, str(self.to_string()), parse_mode='Markdown')
-                # Prueba para comprobar que funciona el metodo de enviar pregunta
-                self.enviar_pregunta(chat_id)
             elif command == 'done':
                 bot.send_message(chat_id, 'Necesitas al menos una pregunta para crear la votación.')
                 self.pide_pregunta(chat_id)
@@ -156,7 +195,7 @@ class Votacion:
         id_pregunta = self.id_primera_pregunta + len(self.respuestas_seleccionadas)
         try:
             voto = utils.cipher_vote(respuesta)
-            url = 'https://recuento.agoraus1.egc.duckdns.org/api/emitirVoto'
+            url = 'https://beta.recuento.agoraus1.egc.duckdns.org/api/emitirVoto'
             payload = {'token': 'test_cabinaTelegram', 'idPregunta': id_pregunta, 'voto': voto}
             result = requests.post(url, payload).json()
             bot.answer_callback_query(call.id, result['mensaje'])
@@ -177,7 +216,7 @@ class Votacion:
 
     def get_votacion_api(self, idVotacion):
         try:
-            url = 'https://recuento.agoraus1.egc.duckdns.org/api/verVotacion?idVotacion=%i&detallado=si' % idVotacion
+            url = 'https://beta.recuento.agoraus1.egc.duckdns.org/api/verVotacion?idVotacion=%i&detallado=si' % idVotacion
             json = requests.get(url).json()
             self.titulo = json['votacion']['titulo']
             self.cp = json['votacion']['cp']
@@ -195,6 +234,29 @@ class Votacion:
         except Exception as e:
             print(str(e))
             return 'No se puede obtener la votación. Vuelva a intentarlo mas tarde...'
+
+    def put_votacion_api(self):
+        try:
+            url = "https://beta.recuento.agoraus1.egc.duckdns.org/api/crearVotacion"
+            preguntas_to_api = []
+            preguntas = self.mostrar_preguntas()
+            for pregunta in preguntas:
+                respuestas = self.mostrar_respuestas(pregunta)
+                pregunta_to_api = {"texto_pregunta": pregunta.split('. ')[1],
+                                   "multirespuesta": False,
+                                   "opciones": respuestas}
+                preguntas_to_api.append(pregunta_to_api)
+
+            json = {"titulo": self.titulo,
+                       "cp": self.cp,
+                       "fecha_cierre": self.fecha_cierre,
+                       "preguntas": preguntas_to_api}
+            result = requests.post(url, json=json)
+            print(result.text)
+            print(result.text)
+        except Exception as e:
+            print(str(e))
+
 
 class Panel:
 

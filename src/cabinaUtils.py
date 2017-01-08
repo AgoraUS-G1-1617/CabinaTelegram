@@ -53,7 +53,7 @@ class CabinaUtils:
     # VER TODAS LAS VOTACIONES DEL SISTEMA
     def ver_votaciones(self, message):
         try:
-            url = 'https://recuento.agoraus1.egc.duckdns.org/api/verVotaciones'
+            url = 'https://beta.recuento.agoraus1.egc.duckdns.org/api/verVotaciones'
             html = ur.urlopen(url).read()
             data = json.loads(html.decode('utf-8'))
             diccionario_votaciones = data.get('votaciones')
