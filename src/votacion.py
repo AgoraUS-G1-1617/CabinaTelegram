@@ -193,7 +193,7 @@ class Votacion:
         message = call.message
         respuesta = call.data
         chat_id = message.chat.id
-        id_pregunta = self.id_primera_pregunta + len(self.respuestas_seleccionadas) - 1
+        id_pregunta = self.id_primera_pregunta + len(self.respuestas_seleccionadas)
         try:
             voto = utils.cipher_vote(respuesta)
             if self.modificar_voto:
