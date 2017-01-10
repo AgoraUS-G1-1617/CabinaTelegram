@@ -9,6 +9,7 @@ login_link = config['Telegram']['login_link']
 register_link = 'https://authb.agoraus1.egc.duckdns.org/register.php'
 public_key = ''
 recuento_api = 'https://recuento.agoraus1.egc.duckdns.org/api'
+jar_sha = ''
 
 bot = telebot.TeleBot(token_id)
 
