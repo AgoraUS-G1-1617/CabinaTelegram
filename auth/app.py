@@ -29,7 +29,8 @@ def login(user_id=None):
         if not utils.check_credentials(request.form['username'], hashlib.md5(request.form['password'].encode()).hexdigest()):
             error = 'Invalid Credentials. Please try again.'
         else:
-            token = utils.generate_token(user_id)
+            token = utils.generate_token(user_id, utils.get_auth_token(
+                request.form['username'], hashlib.md5(request.form['password'].encode()).hexdigest()))
             invite = variables.link + token
             return redirect(invite)
     return render_template('login.html', error=error)

@@ -8,6 +8,8 @@ import subprocess
 import json
 import urllib.request as ur
 
+import variables
+
 class Utils:
     def almacenar_votacion(self,titulo, user_id, preguntas_respuestas):
         # Ruta donde se creará la base de datos (por defecto estará en la carpeta actual)
@@ -78,34 +80,34 @@ class Utils:
 
     def cipher_vote(self, vote):
         try:
-            url = 'https://beta.recuento.agoraus1.egc.duckdns.org/api/clavePublica'
+            url = 'https://recuento.agoraus1.egc.duckdns.org/api/clavePublica'
             public_key = requests.get(url).text
             ans = subprocess.check_output(['java', '-jar', 'src/verification.jar', 'cipher', '%s' % vote, '%s' % public_key])
         except:
             ans = None
         return ans
 
-    def generate_token(self, telegram_id):
-        token = hashlib.sha1(os.urandom(128)).hexdigest()
+    def generate_token(self, telegram_id, auth_token):
+        verify_token = hashlib.sha1(os.urandom(128)).hexdigest()
         try:
             path = 'votacion.db' # CAMBIAR
             con = lite.connect(path)
             with con:
                 cur = con.cursor()
-                cur.execute("INSERT OR REPLACE INTO Usuario(Id, Telegram_id, Token, Logged) "
-                            "VALUES((select Id from Usuario where Telegram_id = ?),?,?,?)",
-                            (telegram_id, telegram_id, token, 0))
-            return token
+                cur.execute("INSERT OR REPLACE INTO Usuario(Id, Telegram_id, VerifyToken, AuthToken, Logged) "
+                            "VALUES((select Id from Usuario where Telegram_id = ?),?,?,?,?)",
+                            (telegram_id, telegram_id, verify_token, auth_token,0))
+            return verify_token
         except Exception as e:
             print(str(e))
 
-    def set_logged(self, telegram_id, token):
+    def set_logged(self, telegram_id, verify_token):
         try:
             path = 'votacion.db'
             con = lite.connect(path)
             with con:
                 cur = con.cursor()
-                cur.execute("UPDATE Usuario SET Logged = 1 WHERE Telegram_id = ? AND Token = ?", (telegram_id, token))
+                cur.execute("UPDATE Usuario SET Logged = 1 WHERE Telegram_id = ? AND VerifyToken = ?", (telegram_id, verify_token))
                 logged = cur.execute("SELECT Logged FROM Usuario WHERE Telegram_id = ?", (telegram_id,)).fetchone()[0]
                 return bool(logged)
         except Exception as e:
@@ -138,10 +140,21 @@ class Utils:
         # Extracts the unique_code from the sent /start command.
         return text.split()[1] if len(text.split()) > 1 else None
 
-    def get_token(self, username, password):
+    def get_auth_token(self, username, password):
         pre_token = username + hashlib.md5(password.encode()).hexdigest()
         token = username + ':' + hashlib.md5(pre_token.encode()).hexdigest()
         return token
+
+    def get_auth_token_telegramId(self, telegram_id):
+        try:
+            path = 'votacion.db'
+            con = lite.connect(path)
+            with con:
+                cur = con.cursor()
+                auth_token = cur.execute("SELECT AuthToken FROM Usuario WHERE Telegram_id = ?", (telegram_id,)).fetchone()[0]
+                return auth_token
+        except Exception as e:
+            print(str(e))
 
     def check_token(self, token):
         url = 'https://authb.agoraus1.egc.duckdns.org/api/index.php?method=checkToken&token=%s' % token
@@ -150,12 +163,12 @@ class Utils:
         return valid
 
     def check_credentials(self, username, password):
-        token = self.get_token(username, password)
+        token = self.get_auth_token(username, password)
         return self.check_token(token)
 
     def obtener_votaciones(self):
         try:
-            url = 'https://beta.recuento.agoraus1.egc.duckdns.org/api/verVotaciones'
+            url = variables.recuento_api + '/verVotaciones'
             html = ur.urlopen(url).read()
             data = json.loads(html.decode('utf-8'))
             diccionario_votaciones = data.get('votaciones')

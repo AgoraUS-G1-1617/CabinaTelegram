@@ -25,6 +25,7 @@ class Votacion:
         self.owner_id = 0
         self.temp_msg_question_id = None
         self.temp_preguntas = None
+        self.temp_id_opcion = 0
         self.modificar_voto = False
 
     def crear_votacion(self, message):
@@ -65,7 +66,7 @@ class Votacion:
             bot.register_next_step_handler(msg, self.captura_cp)
 
     def pide_fecha_cierre(self, chat_id):
-        msg = bot.send_message(chat_id, 'Dime una *fecha de cierre* con el formato "dd/mm/yyyy":', parse_mode='Markdown')
+        msg = bot.send_message(chat_id, 'Dime una *fecha de cierre* con el formato "dd/mm/YYYY HH:MM":', parse_mode='Markdown')
         bot.register_next_step_handler(msg, self.captura_fecha_cierre)
 
     def captura_fecha_cierre(self, message):
@@ -77,11 +78,11 @@ class Votacion:
             return False
         else:
             try:
-                fecha_cierre = str(datetime.datetime.strptime(fecha_cierre, '%d/%m/%Y'))
+                fecha_cierre = str(datetime.datetime.strptime(fecha_cierre, '%d/%m/%Y %H:%M'))
                 self.fecha_cierre = fecha_cierre
                 self.pide_pregunta(chat_id)
             except:
-                msg = bot.send_message(message.chat.id, 'Introduzca una fecha correcta (dd/mm/yyyy)')
+                msg = bot.send_message(message.chat.id, 'Introduzca una fecha correcta (dd/mm/YYYY HH:MM)')
                 bot.register_next_step_handler(msg, self.captura_fecha_cierre)
 
     def pide_pregunta(self, chat_id):
@@ -178,10 +179,9 @@ class Votacion:
         respuestas = self.mostrar_respuestas(pregunta)
         pregunta_txt = '*%s*\n\n%i. %s' % (self.titulo, len(self.respuestas_seleccionadas)+1, pregunta)
         markup = types.InlineKeyboardMarkup()
-        i = 0
         for respuesta in respuestas:
-            markup.add(types.InlineKeyboardButton(respuesta, callback_data=str(i)))
-            i += 1
+            markup.add(types.InlineKeyboardButton(respuesta, callback_data=str(self.temp_id_opcion)))
+            self.temp_id_opcion += 1
         if self.temp_msg_question_id is None:
             msg_question = bot.send_message(chat_id, pregunta_txt, reply_markup=markup, parse_mode='Markdown')
             self.temp_msg_question_id = msg_question.message_id
@@ -197,16 +197,15 @@ class Votacion:
         try:
             voto = utils.cipher_vote(respuesta)
             if self.modificar_voto:
-                url = 'https://beta.recuento.agoraus1.egc.duckdns.org/api/modificarVoto'
-                payload = {'token': 'test_cabinaTelegram', 'idPregunta': id_pregunta, 'nuevoVoto': voto}
+                url = variables.recuento_api + '/modificarVoto'
+                payload = {'token': utils.get_auth_token_telegramId(chat_id), 'idPregunta': id_pregunta, 'nuevoVoto': str(voto)}
             else:
-                url = 'https://beta.recuento.agoraus1.egc.duckdns.org/api/emitirVoto'
-                payload = {'token': 'test_cabinaTelegram', 'idPregunta': id_pregunta, 'voto': voto}
-            result = requests.post(url, payload).json()
+                url = variables.recuento_api + '/emitirVoto'
+                payload = {'token': utils.get_auth_token_telegramId(chat_id), 'idPregunta': id_pregunta, 'voto': str(voto)}
+            result = requests.post(url, json=payload)
             bot.answer_callback_query(call.id, result['mensaje'])
         except Exception as e:
-            bot.reply_to(message, e)
-        self.id_primera_pregunta += 1
+            bot.send_message(chat_id, str(e))
         self.respuestas_seleccionadas.append(respuesta)
         self.enviar_pregunta(chat_id)
 
@@ -221,7 +220,7 @@ class Votacion:
 
     def get_votacion_api(self, idVotacion):
         try:
-            url = 'https://beta.recuento.agoraus1.egc.duckdns.org/api/verVotacion?idVotacion=%i&detallado=si' % idVotacion
+            url = variables.recuento_api + '/verVotacion?idVotacion=%i&detallado=si' % idVotacion
             json = requests.get(url).json()
             self.titulo = json['votacion']['titulo']
             self.cp = json['votacion']['cp']
@@ -231,6 +230,7 @@ class Votacion:
             for p in preguntas:
                 if preguntas.index(p) == 0:
                     self.id_primera_pregunta = int(p['id_pregunta'])
+                    self.temp_id_opcion = int(p['opciones'][0]['id_opcion'])
                 pregunta = p['texto_pregunta']
                 respuestas = []
                 for r in p['opciones']:
@@ -242,7 +242,7 @@ class Votacion:
 
     def put_votacion_api(self):
         try:
-            url = "https://beta.recuento.agoraus1.egc.duckdns.org/api/crearVotacion"
+            url = variables.recuento_api + '/crearVotacion'
             preguntas_to_api = []
             preguntas = self.mostrar_preguntas()
             for pregunta in preguntas:
@@ -258,14 +258,13 @@ class Votacion:
                        "preguntas": preguntas_to_api}
             result = requests.post(url, json=json)
             print(result.text)
-            print(result.text)
         except Exception as e:
             print(str(e))
 
     def eliminar_votos_api(self, call):
         result = {'mensaje': '...'}
         try:
-            url = 'https://beta.recuento.agoraus1.egc.duckdns.org/api/eliminarVoto'
+            url = variables.recuento_api + '/eliminarVoto'
             id_ultima_pregunta = self.id_primera_pregunta + len(self.mostrar_preguntas())
             for id_pregunta in range(self.id_primera_pregunta, id_ultima_pregunta):
                 payload = {'token': 'test_AÑADIRTOKEN', 'idPregunta': id_pregunta}

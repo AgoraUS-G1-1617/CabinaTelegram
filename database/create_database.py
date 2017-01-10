@@ -23,7 +23,7 @@ with con:
     # cur.execute("DROP TABLE IF EXISTS Usuario")
 
     #Crear tabla de Usuario
-    cur.execute("CREATE TABLE IF NOT EXISTS Usuario(Id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,Telegram_id INTEGER, Token TEXT, Logged INTEGER)")      #Aquí habrá que poner que la Telegram_id no puede ser nula
+    cur.execute("CREATE TABLE IF NOT EXISTS Usuario(Id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,Telegram_id INTEGER, VerifyToken TEXT, AuthToken TEXT, Logged INTEGER)")      #Aquí habrá que poner que la Telegram_id no puede ser nula
 
     #Crear tabla de Votacion
     cur.execute("CREATE TABLE IF NOT EXISTS Votacion(Id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,Nombre TEXT NOT NULL,Id_Usuario INTEGER NOT NULL,FOREIGN KEY (Id_Usuario) REFERENCES Usuario(Id))")
