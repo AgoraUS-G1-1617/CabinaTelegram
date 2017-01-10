@@ -95,7 +95,17 @@ class TestBot:
         except Exception:
             print('Se muestra este mensaje en caso de que funcione la peticion')
 
-    def test_recontar_votacion_no_terminada(self):
+    def test_recontar_votacion(self):
+        callback_msg = self.create_callback_query('RE2')
+
+        def callback_recontar_votation(call):
+            return cabinaUtils.callback_recontar_votation(call)
+
+        res = callback_recontar_votation(callback_msg)
+        errormsg = 'No se puede recontar la votacion porque no esta cerrada'
+        assert errormsg != res
+
+    def test_recontar_votacion_negativo(self):
         callback_msg = self.create_callback_query('RE1')
 
         def callback_recontar_votation(call):
