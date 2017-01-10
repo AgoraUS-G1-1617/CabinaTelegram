@@ -24,7 +24,7 @@ class Votacion:
         self.respuestas_seleccionadas = []
         self.owner_id = 0
         self.temp_msg_question_id = None
-        self.temp_preguntas = []
+        self.temp_preguntas = None
         self.temp_id_opcion = 0
         self.modificar_voto = False
 

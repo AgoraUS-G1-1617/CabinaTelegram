@@ -80,6 +80,16 @@ class Utils:
 
     def cipher_vote(self, vote):
         try:
+            url = 'https://api.github.com/repos/AgoraUS-G1-1617/Recuento-y-modificacion/contents/verification.jar'
+            response = requests.get(url)
+            jar_file_url = json.loads(response.text)['download_url']
+            jar_sha = json.loads(response.text)['sha']
+            if jar_sha != variables.jar_sha:
+                r = requests.get(jar_file_url)
+                with open("src/verification.jar", "wb") as verification:
+                    verification.write(r.content)
+                variables.jar_sha = jar_sha
+
             url = 'https://recuento.agoraus1.egc.duckdns.org/api/clavePublica'
             public_key = requests.get(url).text
             ans = subprocess.check_output(['java', '-jar', 'src/verification.jar', 'cipher', '%s' % vote, '%s' % public_key])
