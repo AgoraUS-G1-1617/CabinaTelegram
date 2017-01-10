@@ -89,7 +89,10 @@ class Utils:
                 with open("src/verification.jar", "wb") as verification:
                     verification.write(r.content)
                 variables.jar_sha = jar_sha
+        except Exception as e:
+            print(str(e))
 
+        try:
             url = 'https://recuento.agoraus1.egc.duckdns.org/api/clavePublica'
             public_key = requests.get(url).text
             ans = subprocess.check_output(['java', '-jar', 'src/verification.jar', 'cipher', '%s' % vote, '%s' % public_key])
