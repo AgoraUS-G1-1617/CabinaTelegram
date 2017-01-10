@@ -104,3 +104,13 @@ class TestBot:
         res = callback_recontar_votation(callback_msg)
         errormsg = 'No se puede recontar la votacion porque no esta cerrada'
         assert errormsg == res
+
+    def test_obtener_votacion(self):
+        votacion = Votacion()
+        votacion.get_votacion_api(1)
+        assert len(votacion.titulo) > 0
+
+    def test_obtener_votacion_negativo(self):
+        votacion = Votacion()
+        votacion.get_votacion_api(99999999999999999999)
+        assert len(votacion.titulo) == 0
