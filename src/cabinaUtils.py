@@ -109,7 +109,7 @@ class CabinaUtils:
         user_id = call.from_user.id
         votacion_id = int(call.data.split('RE')[1])
         try:
-            result = 'Recuento de la votación: *%i*\n\n' % votacion_id
+            result = 'Recuento de la votación *%i*:\n\n' % votacion_id
             url = variables.recuento_api + '/recontarVotacion?idVotacion=' + str(votacion_id)
             html = ur.urlopen(url).read()
             data = json.loads(html.decode('utf-8'))
@@ -161,7 +161,6 @@ class CabinaUtils:
 
     def callback_start_votation(self, call):
         user_id = call.from_user.id
-        is_voted = False # ESTO LO MARCARÁ LA INTEGRACIÓN CON CENSOS
         modificar_voto = False
         eliminar_voto = False
         try:
@@ -176,7 +175,11 @@ class CabinaUtils:
                     eliminar_voto = True
                 votacion_id = int(votacion_id)
 
-                if is_voted and not modificar_voto and not eliminar_voto:
+                # puede_votar = utils.puede_votar(votacion_id, user_id)
+                # puede_votar = utils.puede_votar(23, user_id) # NO FUNCIONA CORRECTAMENTE SU API
+                puede_votar = True
+
+                if not puede_votar and not modificar_voto and not eliminar_voto:
                     markup = types.InlineKeyboardMarkup(row_width=2)
                     modificar_button = types.InlineKeyboardButton("Modificar", callback_data="ID%iM" % votacion_id)
                     eliminar_button = types.InlineKeyboardButton("Eliminar", callback_data="ID%iE" % votacion_id)
@@ -187,11 +190,15 @@ class CabinaUtils:
                     votacion = Votacion()
                     votacion.modificar_voto = modificar_voto
                     votacion.get_votacion_api(votacion_id)
-                    variables.sesion[user_id] = votacion
-                    if eliminar_voto:
-                        votacion.eliminar_votos_api(call)
+
+                    if self.estado_votacion(votacion) == 'Abierta':
+                        variables.sesion[user_id] = votacion
+                        if eliminar_voto:
+                            votacion.eliminar_votos_api(call)
+                        else:
+                            votacion.enviar_pregunta(user_id)
                     else:
-                        votacion.enviar_pregunta(user_id)
+                        bot.answer_callback_query(call.id, 'No puedes votar en una votación cerrada')
             else:
                 text = 'Debes iniciar sesión para votar, recuerda que puedes hacerlo con el comando /login'
                 bot.send_message(user_id, text)
