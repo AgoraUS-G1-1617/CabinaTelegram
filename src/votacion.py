@@ -24,7 +24,7 @@ class Votacion:
         self.respuestas_seleccionadas = []
         self.owner_id = 0
         self.temp_msg_question_id = None
-        self.temp_preguntas = None
+        self.temp_preguntas = []
         self.temp_id_opcion = 0
         self.modificar_voto = False
 
@@ -268,12 +268,13 @@ class Votacion:
 
     def eliminar_votos_api(self, call):
         result = {'mensaje': '...'}
+        user_id = call.from_user.id
         try:
             url = variables.recuento_api + '/eliminarVoto'
             id_ultima_pregunta = self.id_primera_pregunta + len(self.mostrar_preguntas())
             for id_pregunta in range(self.id_primera_pregunta, id_ultima_pregunta):
-                payload = {'token': 'test_AÑADIRTOKEN', 'idPregunta': id_pregunta}
-                result = requests.post(url, payload)
+                payload = {'token': utils.get_auth_token_telegramId(user_id), 'idPregunta': id_pregunta}
+                result = requests.post(url, payload).json()
                 print(result)
             bot.answer_callback_query(call.id, result['mensaje'])
         except Exception as e:
