@@ -17,8 +17,8 @@ class Votacion:
         self.id_votacion = 0
         self.id_primera_pregunta = 0
         self.titulo = ""
-        self.fecha_creacion = ""
-        self.fecha_cierre = ""
+        self.fecha_creacion = datetime.datetime.now()
+        self.fecha_cierre = datetime.datetime.now()
         self.cp = ""
         self.preguntas_respuestas = {}
         self.respuestas_seleccionadas = []
@@ -78,8 +78,7 @@ class Votacion:
             return False
         else:
             try:
-                fecha_cierre = str(datetime.datetime.strptime(fecha_cierre, '%d/%m/%Y %H:%M'))
-                self.fecha_cierre = fecha_cierre
+                self.fecha_cierre = datetime.datetime.strptime(fecha_cierre, '%d/%m/%Y %H:%M')
                 self.pide_pregunta(chat_id)
             except:
                 msg = bot.send_message(message.chat.id, 'Introduzca una fecha correcta (dd/mm/YYYY HH:MM)')
@@ -198,12 +197,16 @@ class Votacion:
             voto = utils.cipher_vote(respuesta)
             if self.modificar_voto:
                 url = variables.recuento_api + '/modificarVoto'
-                payload = {'token': utils.get_auth_token_telegramId(chat_id), 'idPregunta': id_pregunta, 'nuevoVoto': str(voto)}
+                payload = {'token': utils.get_auth_token_telegramId(chat_id), 'idPregunta': id_pregunta, 'nuevoVoto': voto}
             else:
                 url = variables.recuento_api + '/emitirVoto'
-                payload = {'token': utils.get_auth_token_telegramId(chat_id), 'idPregunta': id_pregunta, 'voto': str(voto)}
-            result = requests.post(url, json=payload)
-            bot.answer_callback_query(call.id, result['mensaje'])
+                payload = {'token': utils.get_auth_token_telegramId(chat_id), 'idPregunta': id_pregunta, 'voto': voto}
+            result = requests.post(url, payload)
+            if result.status_code == 502:
+                bot.answer_callback_query(call.id, 'Operación no permitida')
+            else:
+                result = result.json()
+                bot.answer_callback_query(call.id, result['mensaje'])
         except Exception as e:
             bot.send_message(chat_id, str(e))
         self.respuestas_seleccionadas.append(respuesta)
@@ -224,8 +227,10 @@ class Votacion:
             json = requests.get(url).json()
             self.titulo = json['votacion']['titulo']
             self.cp = json['votacion']['cp']
-            self.fecha_creacion = json['votacion']['fecha_creacion']
-            self.fecha_cierre = json['votacion']['fecha_cierre']
+            fecha_creacion = json['votacion']['fecha_creacion']
+            self.fecha_creacion = datetime.datetime.strptime(fecha_creacion, '%Y-%m-%d %H:%M:%S')
+            fecha_cierre = json['votacion']['fecha_cierre']
+            self.fecha_cierre = datetime.datetime.strptime(fecha_cierre, '%Y-%m-%d %H:%M:%S')
             preguntas = json['votacion']['preguntas']
             for p in preguntas:
                 if preguntas.index(p) == 0:
@@ -254,7 +259,7 @@ class Votacion:
 
             json = {"titulo": self.titulo,
                        "cp": self.cp,
-                       "fecha_cierre": self.fecha_cierre,
+                       "fecha_cierre": str(self.fecha_cierre),
                        "preguntas": preguntas_to_api}
             result = requests.post(url, json=json)
             print(result.text)

@@ -1,6 +1,7 @@
 # -*- encoding: utf-8 -*-
 
 from telebot import types
+import datetime
 
 import variables
 from src.utils import Utils
@@ -60,39 +61,6 @@ class CabinaUtils:
             bot.send_message(message.chat.id, errormsg)
             return errormsg
 
-    # VER RESULTADO (RECUENTO) DE UNA VOTACION EN PARTICULAR
-    # ACTUALMENTE NO SE LE PUEDEN PASAR VOTACIONES EN PARTICULAR, SOLO FUNCIONA CON UNA FIJA
-    def recuento_votacion(self, message):
-        try:
-            result = 'Recuento de la votación:'
-            url = 'https://recuento.agoraus1.egc.duckdns.org/api/recontarVotacion?idVotacion=4'
-            html = ur.urlopen(url).read()
-            data = json.loads(html.decode('utf-8'))
-            lista_preguntas = data.get('preguntas')
-
-            # pregunta es un diccionario
-            for pregunta in lista_preguntas:
-                for preg, respuestas in pregunta.items():
-                    if preg == ('texto_pregunta'):
-                        result += '\n\n' + str(pregunta['texto_pregunta'])
-                        print('Esto es una pregunta: ' + str(pregunta['texto_pregunta']))
-                    elif isinstance(respuestas, list):
-                        for opcion in respuestas:
-                            for clave, valor in opcion.items():
-                                if clave == ('texto_opcion'):
-                                    result += '\n' + str(opcion['texto_opcion'])
-                                    print('Opcion: ' + str(opcion['texto_opcion']))
-                                if clave == ('votos'):
-                                    result += ' votos: ' + str(opcion['votos'])
-                                    print('Numero de votos: ' + str(opcion['votos']))
-
-            bot.send_message(message.chat.id, result)
-            return result
-        except Exception:
-            errormsg = 'No se puede recontar la votacion porque no esta cerrada'
-            bot.send_message(message.chat.id, errormsg)
-            return errormsg
-
     def login(self, message):
         chat_id = message.chat.id
         user_id = message.from_user.id
@@ -126,10 +94,55 @@ class CabinaUtils:
     def info_votacion(self, message):
         chat_id = message.chat.id
         votacion_id = int(message.text.split('_')[1])
+        votacion = Votacion()
+        votacion.get_votacion_api(votacion_id)
+        text = '*%s*\n\nEstado: %s\nCP: %s\nFecha de creación: %s\nFecha de cierre: %s' % \
+               (votacion.titulo, self.estado_votacion(votacion), votacion.cp, str(votacion.fecha_creacion),
+                str(votacion.fecha_cierre))
         markup = types.InlineKeyboardMarkup()
         markup.add(types.InlineKeyboardButton("Comenzar votación", callback_data="ID%i" % votacion_id))
+        markup.add(types.InlineKeyboardButton("Recontar votación", callback_data="RE%i" % votacion_id))
         markup.add(types.InlineKeyboardButton("Compartir", switch_inline_query=str(votacion_id)))
-        bot.send_message(chat_id, "Resultados:\n\nEjemplo 1 -> 0 votos\nEjemplo 2 -> 0 votos", reply_markup=markup)
+        bot.send_message(chat_id, text, reply_markup=markup, parse_mode='Markdown')
+
+    def callback_recontar_votation(self, call):
+        user_id = call.from_user.id
+        votacion_id = int(call.data.split('RE')[1])
+        try:
+            result = 'Recuento de la votación: *%i*\n\n' % votacion_id
+            url = variables.recuento_api + '/recontarVotacion?idVotacion=' + str(votacion_id)
+            html = ur.urlopen(url).read()
+            data = json.loads(html.decode('utf-8'))
+            lista_preguntas = data.get('preguntas')
+
+            # pregunta es un diccionario
+            for i, pregunta in zip(range(1, len(lista_preguntas)+1), lista_preguntas):
+                result += '%i. %s\n' % (i, str(pregunta['texto_pregunta']))
+                for preg, respuestas in pregunta.items():
+                    if isinstance(respuestas, list):
+                        for opcion in respuestas:
+                            for clave, valor in opcion.items():
+                                if clave == ('texto_opcion'):
+                                    result += '▫️ ' + str(opcion['texto_opcion'])
+                                elif clave == ('votos'):
+                                    result += ' - %s\n' % str(opcion['votos'])
+
+            bot.send_message(user_id, result, parse_mode='Markdown')
+            return result
+        except Exception as e:
+            print(str(e))
+            errormsg = 'No se puede recontar la votacion porque no esta cerrada'
+            bot.answer_callback_query(call.id, errormsg)
+            return errormsg
+
+    def estado_votacion(self, votacion):
+        now = datetime.datetime.now()
+        if votacion.fecha_cierre > now:
+            estado = 'Abierta'
+        else:
+            estado = 'Cerrada'
+        return estado
+
 
     def compartir_votaciones(self, message):
         try:
