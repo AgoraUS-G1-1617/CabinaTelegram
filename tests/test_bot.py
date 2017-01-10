@@ -3,13 +3,13 @@
 import time
 
 import pytest
-import json
-import urllib.request as ur
 from telebot import types
 
 import variables
 from src.votacion import Votacion
 from src.cabinaUtils import CabinaUtils
+from src.utils import Utils
+import requests
 
 bot = variables.bot
 cabinaUtils = CabinaUtils()
@@ -114,3 +114,25 @@ class TestBot:
         votacion = Votacion()
         votacion.get_votacion_api(99999999999999999999)
         assert len(votacion.titulo) == 0
+
+    def test_emitir_voto(self):
+        utils = Utils()
+        voto = utils.cipher_vote('1')
+        url = variables.recuento_api + '/emitirVoto'
+        payload = {'token': 'test_cabinaTelegram', 'idPregunta': 1, 'voto': voto}
+        result = requests.post(url, payload)
+        if result.status_code == 201:
+            print('Test de emisión de voto realizado con éxito')
+        else:
+            print('No se pudo emitir el voto')
+
+    def test_emitir_voto_negativo(self):
+        utils = Utils()
+        voto = utils.cipher_vote('1')
+        url = variables.recuento_api + '/emitirVoto'
+        payload = {'token': 'test_cabinaTelegram', 'idPregunta': 99999999999 , 'voto': voto}
+        result = requests.post(url, payload)
+        if result.status_code == 201:
+            print('Algo no fue bien')
+        else:
+            print('Test negativo de emisión de voto realizado con éxito')
