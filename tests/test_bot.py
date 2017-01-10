@@ -23,6 +23,10 @@ class TestBot:
         chat = types.User(296066710, 'test')
         return types.Message(1, chat, None, chat, 'text', params)
 
+    def create_callback_query(self, data):
+        user = types.User(296066710, 'test')
+        return types.CallbackQuery(1, user, data, 2279105952872167927)
+
     def test_crear_votacion(self):
         votacion = Votacion()
         votacion.bot = bot
@@ -92,15 +96,11 @@ class TestBot:
             print('Se muestra este mensaje en caso de que funcione la peticion')
 
     def test_recontar_votacion_no_terminada(self):
-        msg = self.create_text_message('/recontarVotacion')
+        callback_msg = self.create_callback_query('RE1')
 
-        @bot.message_handler(commands=['recontarVotacion'])
-        def recontar_votacion_no_terminada(message):
-            res = cabinaUtils.recuento_votacion(message)
-            return res
+        def callback_recontar_votation(call):
+            return cabinaUtils.callback_recontar_votation(call)
 
-        bot.process_new_messages([msg])
-        time.sleep(1)
-        respuesta = recontar_votacion_no_terminada(msg)
+        res = callback_recontar_votation(callback_msg)
         errormsg = 'No se puede recontar la votacion porque no esta cerrada'
-        assert errormsg == respuesta
+        assert errormsg == res

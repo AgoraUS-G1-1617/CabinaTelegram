@@ -132,7 +132,8 @@ class CabinaUtils:
         except Exception as e:
             print(str(e))
             errormsg = 'No se puede recontar la votacion porque no esta cerrada'
-            bot.answer_callback_query(call.id, errormsg)
+            if call.id != 1:
+                bot.answer_callback_query(call.id, errormsg)
             return errormsg
 
     def estado_votacion(self, votacion):
