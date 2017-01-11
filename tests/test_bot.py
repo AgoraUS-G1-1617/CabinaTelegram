@@ -9,10 +9,11 @@ import variables
 from src.votacion import Votacion
 from src.cabinaUtils import CabinaUtils
 from src.utils import Utils
-import requests
+from database import create_database
 
 bot = variables.bot
 cabinaUtils = CabinaUtils()
+utils = Utils()
 
 should_skip = bot is None
 
@@ -25,18 +26,21 @@ class TestBot:
 
     def create_callback_query(self, data):
         user = types.User(296066710, 'test')
-        return types.CallbackQuery(1, user, data, 2279105952872167927)
+        return types.CallbackQuery(1, user, data, 1)
 
     def test_crear_votacion(self):
         votacion = Votacion()
         votacion.bot = bot
         msg = self.create_text_message('/votacion')
         msg2 = self.create_text_message('Titulo Test')
-        msg3 = self.create_text_message('¿Cuando quedamos?')
-        msg4 = self.create_text_message('Hoy')
-        msg5 = self.create_text_message('Mañana')
-        msg6 = self.create_text_message('/done')
-        msg7 = self.create_text_message('/done')
+        msg3 = self.create_text_message('41300')
+        msg4 = self.create_text_message('11/01/2050 00:00')
+        msg5 = self.create_text_message('Hoy')
+        msg6 = self.create_text_message('¿Cuando quedamos?')
+        msg7 = self.create_text_message('Hoy')
+        msg8 = self.create_text_message('Mañana')
+        msg9 = self.create_text_message('/done')
+        msg10 = self.create_text_message('/cancel')
 
         @bot.message_handler(commands=['votacion'])
         def crear_votacion(message):
@@ -55,6 +59,12 @@ class TestBot:
         bot.process_new_messages([msg6])
         time.sleep(1)
         bot.process_new_messages([msg7])
+        time.sleep(1)
+        bot.process_new_messages([msg8])
+        time.sleep(1)
+        bot.process_new_messages([msg9])
+        time.sleep(1)
+        bot.process_new_messages([msg10])
         time.sleep(1)
 
         resultado = Votacion()
@@ -126,23 +136,30 @@ class TestBot:
         assert len(votacion.titulo) == 0
 
     def test_emitir_voto(self):
-        utils = Utils()
-        url_eliminar = variables.recuento_api + '/eliminarVoto'
-        payload_eliminar = {'token': 'test_cabinaTelegram', 'idPregunta': 1}
-        requests.post(url_eliminar, payload_eliminar).json()
-        time.sleep(1)
+        create_database
+        call = self.create_callback_query('1')
+        votacion = Votacion()
+        votacion.get_votacion_api(1)
+        variables.sesion[call.from_user.id] = votacion
+        utils.generate_token(call.from_user.id, 'test_cabinaTelegram')
 
-        voto = utils.cipher_vote(1)
-        url_emitir = variables.recuento_api + '/emitirVoto'
-        payload_emitir = {'token': 'test_cabinaTelegram', 'idPregunta': 1, 'voto': voto}
-        result = requests.post(url_emitir, payload_emitir)
-        assert result.status_code == 201
+        def responder(call):
+            return cabinaUtils.responder(call)
+
+        res = responder(call)
+        # Si responde con 400 significa que se ha recibido pero el usuario ya había votado antes
+        assert res == 201 or res == 400
 
     def test_emitir_voto_negativo(self):
-        utils = Utils()
-        voto = utils.cipher_vote('1')
-        url = variables.recuento_api + '/emitirVoto'
-        payload = {'token': 'test_cabinaTelegram', 'idPregunta': 99999999999 , 'voto': voto}
-        result = requests.post(url, payload)
+        call = self.create_callback_query('1')
+        votacion = Votacion()
+        votacion.get_votacion_api(1)
+        variables.sesion[call.from_user.id] = votacion
+        utils.generate_token(call.from_user.id, 'negativo')
 
-        assert result.status_code != 201
+        def responder(call):
+            return cabinaUtils.responder(call)
+
+        res = responder(call)
+        # Si no es none significa que ha ejecutado sin error
+        assert res is not None

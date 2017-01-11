@@ -192,9 +192,8 @@ class Votacion:
             bot.edit_message_reply_markup(chat_id=chat_id, message_id=self.temp_msg_question_id, reply_markup=markup)
 
     def responder_pregunta(self, call):
-        message = call.message
         respuesta = call.data
-        chat_id = message.chat.id
+        chat_id = call.from_user.id
         id_pregunta = self.id_primera_pregunta + len(self.respuestas_seleccionadas)
         try:
             voto = utils.cipher_vote(respuesta)
@@ -205,11 +204,12 @@ class Votacion:
                 url = variables.recuento_api + '/emitirVoto'
                 payload = {'token': utils.get_auth_token_telegramId(chat_id), 'idPregunta': id_pregunta, 'voto': voto}
             result = requests.post(url, payload)
-            if result.status_code == 502:
+            if result.status_code == 502 and call.id != 1:
                 bot.answer_callback_query(call.id, 'Operación no permitida')
-            else:
+            elif call.id != 1:
                 result = result.json()
                 bot.answer_callback_query(call.id, result['mensaje'])
+            return result.status_code
         except Exception as e:
             bot.send_message(chat_id, str(e))
         self.respuestas_seleccionadas.append(respuesta)
@@ -279,7 +279,8 @@ class Votacion:
                 payload = {'token': utils.get_auth_token_telegramId(user_id), 'idPregunta': id_pregunta}
                 result = requests.post(url, payload).json()
                 print(result)
-            bot.answer_callback_query(call.id, result['mensaje'])
+            if call.id != 1:
+                bot.answer_callback_query(call.id, result['mensaje'])
         except Exception as e:
             print(str(e))
 

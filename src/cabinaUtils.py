@@ -89,7 +89,7 @@ class CabinaUtils:
     def responder(self, call):
         user_id = call.from_user.id
         votacion = variables.sesion[user_id]
-        votacion.responder_pregunta(call)
+        return votacion.responder_pregunta(call)
 
     def info_votacion(self, message):
         chat_id = message.chat.id
@@ -106,6 +106,7 @@ class CabinaUtils:
         bot.send_message(chat_id, text, reply_markup=markup, parse_mode='Markdown')
 
     def callback_recontar_votation(self, call):
+        print(call.id)
         user_id = call.from_user.id
         votacion_id = int(call.data.split('RE')[1])
         try:
@@ -197,7 +198,7 @@ class CabinaUtils:
                             votacion.eliminar_votos_api(call)
                         else:
                             votacion.enviar_pregunta(user_id)
-                    else:
+                    elif call.id != 1:
                         bot.answer_callback_query(call.id, 'No puedes votar en una votación cerrada')
             else:
                 text = 'Debes iniciar sesión para votar, recuerda que puedes hacerlo con el comando /login'

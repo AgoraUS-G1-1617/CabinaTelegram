@@ -21,7 +21,7 @@ while True:
             cabinaUtils.send_welcome(message)
 
         @bot.callback_query_handler(func=lambda call: call.data == 'CANCEL')
-        def responder(call):
+        def cancel(call):
             cabinaUtils.cancel(call)
 
         @bot.message_handler(commands=['votaciones'])
