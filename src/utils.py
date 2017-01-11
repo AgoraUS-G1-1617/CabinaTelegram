@@ -35,6 +35,42 @@ class Utils:
                     cur.execute("""INSERT INTO Respuesta(Texto,Veces_elegida,Id_pregunta) VALUES(?,?,?)""",
                                 (respuesta, 0, preguntaId))
 
+    def usuario_participa(self, telegram_id, votacion_id):
+        try:
+            path = 'votacion.db'
+            # Crea una conexión con la base de datos establecida en la ruta. Si no existe la base de datos, se creará una nueva
+            con = lite.connect(path)
+            with con:
+                cur = con.cursor()
+                cur.execute("INSERT OR REPLACE INTO Participacion(Id, Telegram_id, Id_votacion) "
+                            "VALUES((SELECT Id FROM Participacion WHERE Telegram_id = ?),?, ?)",
+                            (telegram_id, telegram_id, votacion_id))
+        except Exception as e:
+            print(str(e))
+
+    def puede_participar(self, telegram_id, votacion_id):
+        try:
+            path = 'votacion.db'
+            con = lite.connect(path)
+            with con:
+                cur = con.cursor()
+                logged = cur.execute("SELECT count(Telegram_id) FROM Participacion WHERE Telegram_id = ? AND Id_votacion = ?",
+                                     (telegram_id, votacion_id)).fetchone()[0]
+                return not bool(logged)
+        except Exception as e:
+            print(str(e))
+
+    def eliminar_participacion(self, telegram_id, votacion_id):
+        try:
+            path = 'votacion.db'
+            con = lite.connect(path)
+            with con:
+                cur = con.cursor()
+                cur.execute("DELETE FROM Participacion WHERE Telegram_id = ? AND Id_votacion = ?",
+                                     (telegram_id, votacion_id))
+        except Exception as e:
+            print(str(e))
+
     def get_votacion(self, idVotacion):
         # Ruta donde se creará la base de datos (por defecto estará en la carpeta actual)
         path = 'votacion.db'

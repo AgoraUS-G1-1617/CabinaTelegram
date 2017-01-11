@@ -29,8 +29,8 @@ with con:
     cur.execute("CREATE TABLE IF NOT EXISTS Votacion(Id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,Nombre TEXT NOT NULL,Id_Usuario INTEGER NOT NULL,FOREIGN KEY (Id_Usuario) REFERENCES Usuario(Id))")
 
     #Crear tabla de Participación
-    cur.execute("CREATE TABLE IF NOT EXISTS Participacion(Id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,Id_usuario INTEGER NOT NULL,Id_votacion INTEGER NOT NULL, FOREIGN KEY (Id_usuario) REFERENCES Usuario(Id), FOREIGN KEY (Id_votacion) REFERENCES Votacion(Id))")
-
+    # cur.execute("CREATE TABLE IF NOT EXISTS Participacion(Id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,Id_usuario INTEGER NOT NULL,Id_votacion INTEGER NOT NULL, FOREIGN KEY (Id_usuario) REFERENCES Usuario(Id), FOREIGN KEY (Id_votacion) REFERENCES Votacion(Id))")
+    cur.execute("CREATE TABLE IF NOT EXISTS Participacion(Id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,Telegram_id INTEGER NOT NULL,Id_votacion INTEGER NOT NULL)")
 
     #Crear tabla de Pregunta
     cur.execute("CREATE TABLE IF NOT EXISTS Pregunta(Id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,Texto TEXT NOT NULL,Max_respuestas INT NOT NULL DEFAULT 1,Id_votacion INTEGER NOT NULL, FOREIGN KEY (Id_votacion) REFERENCES Votacion(Id))")

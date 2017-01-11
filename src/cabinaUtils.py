@@ -178,7 +178,7 @@ class CabinaUtils:
 
                 # puede_votar = utils.puede_votar(votacion_id, user_id)
                 # puede_votar = utils.puede_votar(23, user_id) # NO FUNCIONA CORRECTAMENTE SU API
-                puede_votar = True
+                puede_votar = utils.puede_participar(user_id, votacion_id)
 
                 if not puede_votar and not modificar_voto and not eliminar_voto:
                     markup = types.InlineKeyboardMarkup(row_width=2)
@@ -196,7 +196,9 @@ class CabinaUtils:
                         variables.sesion[user_id] = votacion
                         if eliminar_voto:
                             votacion.eliminar_votos_api(call)
+                            utils.eliminar_participacion(user_id, votacion_id)
                         else:
+                            utils.usuario_participa(user_id, votacion_id)
                             votacion.enviar_pregunta(user_id)
                     elif call.id != 1:
                         bot.answer_callback_query(call.id, 'No puedes votar en una votación cerrada')

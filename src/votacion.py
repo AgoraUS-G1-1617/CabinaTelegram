@@ -209,7 +209,8 @@ class Votacion:
             elif call.id != 1:
                 result = result.json()
                 bot.answer_callback_query(call.id, result['mensaje'])
-            return result.status_code
+            else:
+                return result.status_code
         except Exception as e:
             bot.send_message(chat_id, str(e))
         self.respuestas_seleccionadas.append(respuesta)
