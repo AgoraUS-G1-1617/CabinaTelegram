@@ -36,7 +36,6 @@ class CabinaUtils:
                    'Este bot es una integración de dicho sistema y actualmente permite:\n' \
                    '/votacion - 📝 Crea una votación\n' \
                    '/votaciones - ✉️ Muestra las votaciones existentes\n' \
-                   '/recontarVotacion - ✉️ Muestra el resultado de una votación\n' \
                    '/compartir - 🗣 Muestra panel para compartir votaciones\n' \
                    '/login - 🔓 Inicia sesión con una cuenta de authb\n' \
                    '/logout - 🔒 Cierra sesión' % name
