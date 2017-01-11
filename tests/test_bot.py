@@ -127,14 +127,15 @@ class TestBot:
 
     def test_emitir_voto(self):
         utils = Utils()
+        url_eliminar = variables.recuento_api + '/eliminarVoto'
+        payload = {'token': 'test_cabinaTelegram', 'idPregunta': 1}
+        requests.post(url_eliminar, payload).json()
+
         voto = utils.cipher_vote('1')
-        url = variables.recuento_api + '/emitirVoto'
+        url_emitir = variables.recuento_api + '/emitirVoto'
         payload = {'token': 'test_cabinaTelegram', 'idPregunta': 1, 'voto': voto}
-        result = requests.post(url, payload)
-        if result.status_code == 201:
-            print('Test de emisión de voto realizado con éxito')
-        else:
-            print('No se pudo emitir el voto')
+        result = requests.post(url_emitir, payload)
+        assert result.status_code == 201
 
     def test_emitir_voto_negativo(self):
         utils = Utils()
@@ -142,7 +143,5 @@ class TestBot:
         url = variables.recuento_api + '/emitirVoto'
         payload = {'token': 'test_cabinaTelegram', 'idPregunta': 99999999999 , 'voto': voto}
         result = requests.post(url, payload)
-        if result.status_code == 201:
-            print('Algo no fue bien')
-        else:
-            print('Test negativo de emisión de voto realizado con éxito')
+
+        assert result.status_code != 201
