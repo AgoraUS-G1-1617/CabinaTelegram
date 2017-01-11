@@ -37,7 +37,7 @@ class Votacion:
         bot.register_next_step_handler(msg, self.captura_titulo)
 
     def captura_titulo(self, message):
-        titulo = message.text
+        titulo = message.text[:30]
         chat_id = message.chat.id
 
         if telebot.util.is_command(titulo):
@@ -58,11 +58,11 @@ class Votacion:
         if telebot.util.is_command(cp):
             bot.send_message(message.chat.id, '❌ Votación cancelada')
             return False
-        elif cp.isdigit():
+        elif cp.isdigit() and len(cp) == 5:
             self.cp = cp
             self.pide_fecha_cierre(chat_id)
         else:
-            msg = bot.send_message(message.chat.id, 'Introduzca un CP numérico')
+            msg = bot.send_message(message.chat.id, 'Introduzca un CP numérico de longitud 5')
             bot.register_next_step_handler(msg, self.captura_cp)
 
     def pide_fecha_cierre(self, chat_id):
@@ -72,16 +72,19 @@ class Votacion:
     def captura_fecha_cierre(self, message):
         fecha_cierre = message.text
         chat_id = message.chat.id
+        now = datetime.datetime.now()
 
         if telebot.util.is_command(fecha_cierre):
             bot.send_message(message.chat.id, '❌ Votación cancelada')
             return False
         else:
             try:
-                self.fecha_cierre = datetime.datetime.strptime(fecha_cierre, '%d/%m/%Y %H:%M')
+                fecha_cierre = datetime.datetime.strptime(fecha_cierre, '%d/%m/%Y %H:%M')
+                assert fecha_cierre > now
+                self.fecha_cierre = fecha_cierre
                 self.pide_pregunta(chat_id)
             except:
-                msg = bot.send_message(message.chat.id, 'Introduzca una fecha correcta (dd/mm/YYYY HH:MM)')
+                msg = bot.send_message(message.chat.id, 'Introduzca una fecha futura correcta (dd/mm/YYYY HH:MM)')
                 bot.register_next_step_handler(msg, self.captura_fecha_cierre)
 
     def pide_pregunta(self, chat_id):
@@ -93,7 +96,7 @@ class Votacion:
         bot.register_next_step_handler(msg, self.captura_pregunta)
 
     def captura_pregunta(self, message):
-        pregunta = message.text
+        pregunta = message.text[:128]
         chat_id = message.chat.id
 
         if telebot.util.is_command(pregunta):
@@ -126,7 +129,7 @@ class Votacion:
         bot.register_next_step_handler(msg, self.captura_respuesta)
 
     def captura_respuesta(self, message):
-        respuesta = message.text
+        respuesta = message.text[:128]
         chat_id = message.chat.id
 
         if telebot.util.is_command(respuesta):
@@ -155,7 +158,7 @@ class Votacion:
 
     def añade_respuesta(self, respuesta):
         pregunta = sorted(self.preguntas_respuestas)[-1]
-        self.preguntas_respuestas[pregunta].append(respuesta)
+        self.preguntas_respuestas[pregunta].append(respuesta[:128])
 
     def get_num_preguntas(self):
         return len(self.preguntas_respuestas)
@@ -179,7 +182,7 @@ class Votacion:
         pregunta_txt = '*%s*\n\n%i. %s' % (self.titulo, len(self.respuestas_seleccionadas)+1, pregunta)
         markup = types.InlineKeyboardMarkup()
         for respuesta in respuestas:
-            markup.add(types.InlineKeyboardButton(respuesta, callback_data=str(self.temp_id_opcion)))
+            markup.add(types.InlineKeyboardButton(respuesta[:128], callback_data=str(self.temp_id_opcion)))
             self.temp_id_opcion += 1
         if self.temp_msg_question_id is None:
             msg_question = bot.send_message(chat_id, pregunta_txt, reply_markup=markup, parse_mode='Markdown')

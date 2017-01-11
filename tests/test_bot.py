@@ -130,8 +130,9 @@ class TestBot:
         url_eliminar = variables.recuento_api + '/eliminarVoto'
         payload = {'token': 'test_cabinaTelegram', 'idPregunta': 1}
         requests.post(url_eliminar, payload).json()
+        time.sleep(1)
 
-        voto = utils.cipher_vote('1')
+        voto = utils.cipher_vote(1)
         url_emitir = variables.recuento_api + '/emitirVoto'
         payload = {'token': 'test_cabinaTelegram', 'idPregunta': 1, 'voto': voto}
         result = requests.post(url_emitir, payload)
