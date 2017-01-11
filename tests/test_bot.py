@@ -128,14 +128,14 @@ class TestBot:
     def test_emitir_voto(self):
         utils = Utils()
         url_eliminar = variables.recuento_api + '/eliminarVoto'
-        payload = {'token': 'test_cabinaTelegram', 'idPregunta': 1}
-        requests.post(url_eliminar, payload).json()
+        payload_eliminar = {'token': 'test_cabinaTelegram', 'idPregunta': 1}
+        requests.post(url_eliminar, payload_eliminar).json()
         time.sleep(1)
 
         voto = utils.cipher_vote(1)
         url_emitir = variables.recuento_api + '/emitirVoto'
-        payload = {'token': 'test_cabinaTelegram', 'idPregunta': 1, 'voto': voto}
-        result = requests.post(url_emitir, payload)
+        payload_emitir = {'token': 'test_cabinaTelegram', 'idPregunta': 1, 'voto': voto}
+        result = requests.post(url_emitir, payload_emitir)
         assert result.status_code == 201
 
     def test_emitir_voto_negativo(self):
