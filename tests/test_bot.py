@@ -150,12 +150,12 @@ class TestBot:
         # Si responde con 400 significa que se ha recibido pero el usuario ya había votado antes
         assert res == 201 or res == 400
 
-    def test_emitir_voto_negativo(self):
-        call = self.create_callback_query('1')
-        votacion = Votacion()
-        votacion.get_votacion_api(1)
-        variables.sesion[call.from_user.id] = votacion
-        utils.generate_token(call.from_user.id, 'negativo')
+    # def test_emitir_voto_negativo(self):
+    #     call = self.create_callback_query('1')
+    #     votacion = Votacion()
+    #     votacion.get_votacion_api(1)
+    #     variables.sesion[call.from_user.id] = votacion
+    #     utils.generate_token(call.from_user.id, 'negativo')
 
         def responder(call):
             return cabinaUtils.responder(call)
