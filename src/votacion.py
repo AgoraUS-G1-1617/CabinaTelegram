@@ -296,7 +296,7 @@ class Panel:
                 fecha_cierre = votacion['fecha_cierre']
                 votacion_id = votacion['id_votacion']
                 if inline_query.query.lower() in titulo.lower() or inline_query.query == str(votacion_id):
-                    text = 'Has sido invitado para participar en la votación:️\n✉️ %s (tienes hasta fecha limite %s)\n\n' \
+                    text = 'Has sido invitado para participar en la votación:️\n✉️ %s (fecha limite: %s)\n\n' \
                            'Recuerda iniciar el bot si todavía no lo has hecho.' % (titulo, fecha_cierre)
                     markup = types.InlineKeyboardMarkup()
                     markup.add(types.InlineKeyboardButton('Comenzar votación', callback_data='ID%s' % str(votacion_id)))
