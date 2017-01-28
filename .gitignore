@@ -1,2 +1,6 @@
 *.ini
 .idea/*
+.cache/
+__pycache__/
+target/
+*.db
