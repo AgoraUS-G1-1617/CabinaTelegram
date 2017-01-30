@@ -4,4 +4,4 @@ python:
 install: "pip install -r requirements.txt"
 script:
     - sed -i "s/token_id =.*/token_id = 302121523:AAGmqytGIB__0hdJEE9hHkltNosrbdzpSqU/g" config.ini
-    - py.test
+    - python3 src/unittest/python/bot_tests.py

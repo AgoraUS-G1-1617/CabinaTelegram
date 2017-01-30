@@ -163,3 +163,7 @@ class TestBot(unittest.TestCase):
         res = responder(call)
         # Si no es none significa que ha ejecutado sin error
         self.assertTrue(res is not None)
+
+
+if __name__ == "__main__":
+    unittest.main()
