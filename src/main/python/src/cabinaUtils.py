@@ -124,7 +124,6 @@ class CabinaUtils:
                             for clave, valor in opcion.items():
                                 if clave == ('texto_opcion'):
                                     result += '▫️ ' + str(opcion['texto_opcion'])
-                                elif clave == ('votos'):
                                     result += ' - %s\n' % str(opcion['votos'])
 
             bot.send_message(user_id, result, parse_mode='Markdown')

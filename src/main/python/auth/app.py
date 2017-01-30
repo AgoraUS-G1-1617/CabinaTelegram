@@ -1,7 +1,7 @@
 # -*- encoding: utf-8 -*-
 import sys, os
 
-sys.path.insert(0, os.getcwd())
+sys.path.insert(0, os.getcwd()+'/src/main/python')
 
 from flask import Flask, render_template, redirect, request
 import hashlib
