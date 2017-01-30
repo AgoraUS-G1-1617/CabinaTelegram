@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
+import sys
+import os
+sys.path.insert(0, os.getcwd()+'/src/main/python')
 
 import time
 
-import pytest
+import unittest
 from telebot import types
 
 import variables
@@ -15,10 +18,7 @@ bot = variables.bot
 cabinaUtils = CabinaUtils()
 utils = Utils()
 
-should_skip = bot is None
-
-@pytest.mark.skipif(should_skip, reason="No environment variables configured")
-class TestBot:
+class TestBot(unittest.TestCase):
     def create_text_message(self, text):
         params = {'text': text}
         chat = types.User(296066710, 'test')
@@ -72,7 +72,7 @@ class TestBot:
         resultado.preguntas_respuestas = {'1.¿Cuando quedamos?':['Hoy', 'Mañana']}
         votacion = variables.sesion[msg.from_user.id]
 
-        assert votacion.titulo == resultado.titulo
+        self.assertTrue(votacion.titulo == resultado.titulo)
 
     def test_mostrar_votaciones(self):
         msg = self.create_text_message('/votaciones')
@@ -86,7 +86,7 @@ class TestBot:
         time.sleep(1)
         respuesta = mostrar_votaciones(msg)
         errormsg = 'Ha habido algun problema al procesar la peticion'
-        assert errormsg != respuesta
+        self.assertTrue(errormsg != respuesta)
 
     def test_mostrar_votaciones_error(self):
         msg = self.create_text_message('/votaciones')
@@ -101,7 +101,7 @@ class TestBot:
         respuesta = mostrar_votaciones(msg)
         errormsg = 'Ha habido algun problema al procesar la peticion'
         try:
-            assert errormsg == respuesta
+            self.assertTrue(errormsg == respuesta)
         except Exception:
             print('Se muestra este mensaje en caso de que funcione la peticion')
 
@@ -113,7 +113,7 @@ class TestBot:
 
         res = callback_recontar_votation(callback_msg)
         errormsg = 'No se puede recontar la votacion porque no esta cerrada'
-        assert errormsg != res
+        self.assertTrue(errormsg != res)
 
     def test_recontar_votacion_negativo(self):
         callback_msg = self.create_callback_query('RE1')
@@ -123,17 +123,17 @@ class TestBot:
 
         res = callback_recontar_votation(callback_msg)
         errormsg = 'No se puede recontar la votacion porque no esta cerrada'
-        assert errormsg == res
+        self.assertTrue(errormsg == res)
 
     def test_obtener_votacion(self):
         votacion = Votacion()
         votacion.get_votacion_api(1)
-        assert len(votacion.titulo) > 0
+        self.assertTrue(len(votacion.titulo) > 0)
 
     def test_obtener_votacion_negativo(self):
         votacion = Votacion()
         votacion.get_votacion_api(99999999999999999999)
-        assert len(votacion.titulo) == 0
+        self.assertTrue(len(votacion.titulo) == 0)
 
     def test_emitir_voto(self):
         create_database
@@ -148,7 +148,7 @@ class TestBot:
 
         res = responder(call)
         # Si responde con 400 significa que se ha recibido pero el usuario ya había votado antes
-        assert res == 201 or res == 400
+        self.assertTrue(res == 201 or res == 400)
 
     # def test_emitir_voto_negativo(self):
     #     call = self.create_callback_query('1')
@@ -162,4 +162,4 @@ class TestBot:
 
         res = responder(call)
         # Si no es none significa que ha ejecutado sin error
-        assert res is not None
+        self.assertTrue(res is not None)
